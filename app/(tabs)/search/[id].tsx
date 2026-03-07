@@ -77,7 +77,10 @@ export default function Game() {
                 <Text style={styles.mediumTitle}>THE HOST</Text>
                     <View style={styles.mediumHostCard}>
                         <View style={styles.hostSquareProfile}/>
-                        <Text style={styles.gameHost}>{game.organizer.name}</Text>
+                        <View style ={styles.TextColumn}>
+                            <Text style={styles.gameHost}>{game.organizer.name.toUpperCase()}</Text>
+                            <Text style={[styles.gameHost, {color:'gray'}]}>{`${game.organizer.games_organized} GAMES HOSTED`}</Text>
+                        </View>
                     </View>
                 <Text style={styles.mediumTitle}>THE TEAM</Text>
                 <View style={styles.mediumTeamCard}>
@@ -89,13 +92,16 @@ export default function Game() {
                     </View>
                     <Text style={[styles.gameInfo,{marginEnd:10}]}>{`${game.reserved_spots}/${game.total_spots} spots `}</Text>
                 </View>
-                <Text style={[styles.gameTitle, {fontSize:21, marginTop:18, color: "dark-grey"}]}>DESCRIPTION</Text>
-                <Text style={styles.gameDescription}>{game.description} </Text>
+                <Text style={[styles.gameDescriptionTitle]}>DESCRIPTION</Text>
+                <View style = {styles.gameDescriptionCard}>
+                    <Text style={styles.gameDescription}>{game.description} </Text>
+                </View>
             </ParallaxScrollView>
             <View style = {styles.joinGameCard}>
-                <Text style={styles.priceText}>
-                    {game.price_per_spot}
-                </Text>
+                <View style = {{flexDirection:'column'}}>
+                    <Text style={styles.priceText}>SINGLE ENTRY</Text>
+                    <Text style={styles.priceText}>{`£${game.price_per_spot}`}</Text>
+                </View>
                 <Pressable style={styles.joinGameButton}>
                     <Text style={styles.joinGameText}>Join Game</Text>
                 </Pressable>
@@ -128,9 +134,10 @@ export const styles = StyleSheet.create({
         height: '100%'
     },
     gameHost: {
-        fontSize: 11.5,
+        fontSize: 11,
         fontWeight: "500",
-        marginBottom: 6,
+        marginBottom: 2,
+        marginTop:2,
         color: "dark-grey",
         marginLeft:10
     },
@@ -140,7 +147,7 @@ export const styles = StyleSheet.create({
         paddingHorizontal: 2,
         marginBottom: 6,
         color: "dodgerblue",
-        marginTop:-4
+        marginTop:-6
     },
     gameInfoRow: {
         flexDirection:'row',
@@ -181,11 +188,12 @@ export const styles = StyleSheet.create({
     },
     mediumHostCard:{
         backgroundColor: "rgba(30,144,255,0.1)",
+        alignItems:'center',
         flexDirection:"row",
         height:50,
         alignItems:'center',
         borderRadius:10,
-        marginTop:-8
+        marginTop:-9
     },
     hostSquareProfile:{
         width: 34,           // circle diameter
@@ -202,7 +210,7 @@ export const styles = StyleSheet.create({
         height:50,
         alignItems:'center',
         borderRadius:10,
-        marginTop:-8,
+        marginTop:-9,
         justifyContent:'space-between'
     },
     teamCircleProfile:{
@@ -218,45 +226,73 @@ export const styles = StyleSheet.create({
         flexDirection:'row',
         alignItems:'center'
     },
+    gameDescriptionCard: {
+        backgroundColor: "rgba(30,144,255,0.1)",
+        alignItems:'start',
+        flexDirection:"vertical",
+        flex:1,
+        borderRadius:10,
+        marginTop:-9,
+    },
     gameDescription: {
         fontSize: 14,
         fontWeight: "300",
         color: "dark-grey",
+        marginStart:12,
+        marginTop:10,
+        marginBottom:10
+    },
+    gameDescriptionTitle: {
+        fontSize:18,
+        fontWeight: "600",
+        color: "dark-grey",
+        marginTop:7,
+        marginStart:0
     },
     joinGameCard:{
         flexDirection:'row',
-        alignItems:'stretch',
+        alignItems: 'center',
+        justifyContent:'space-between',
         borderRadius: 15,
         paddingVertical: 5,
-        paddingHorizontal: 0,
-        marginHorizontal:20,
-        backgroundColor: "rgba(128,128,128,0.3)" ,
+        marginHorizontal:15,
+        backgroundColor: "#1c1f26" ,
         shadowColor: "#1E90FF",
         shadowOpacity: 0.3,
         shadowRadius: 4,
         elevation: 3,
-        height:40
+        height:48,
     },
     priceText:{
         color:"white",
-        fontSize:15,
+        fontSize:11.5,
         fontWeight:"600",
+        marginStart:25,
+        marginBottom:1,
+        marginTop:3
+    },
+    TextColumn:{
+        flexDirection:'column',
+        justifyContent: 'center',
+        flex:1
     },
     joinGameButton: {
-        justifyContent:'flex-end',
-        borderRadius: 15,
-        paddingVertical: 5,
+        justifyContent:'center',
+        borderRadius: 8,
+        paddingVertical: 8,
         paddingHorizontal: 12,
-        marginHorizontal:90,
-        backgroundColor: "rgba(30,144,255,0.8)",
+        marginHorizontal:15,
+        backgroundColor: "rgba(30,144,255,1)",
         shadowColor: "#1E90FF",
         shadowOpacity: 0.3,
         shadowRadius: 4,
         elevation: 3,
+        height:33
     },
     joinGameText:{
         color:"white",
-        fontSize:15,
-        fontWeight:"600"
+        fontSize:13,
+        fontWeight:"700",
+        marginHorizontal:13
     }
 })
