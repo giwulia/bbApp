@@ -20,6 +20,7 @@ export default function Game() {
             setImgReady(false);
 
             const data = await getGame(id);
+            if (!data) return; 
             if (cancelled) return;  // if this effect is no longer valid, stop immediately
 
             setGame(data);
@@ -191,7 +192,6 @@ export const styles = StyleSheet.create({
         alignItems:'center',
         flexDirection:"row",
         height:50,
-        alignItems:'center',
         borderRadius:10,
         marginTop:-9
     },
@@ -228,8 +228,8 @@ export const styles = StyleSheet.create({
     },
     gameDescriptionCard: {
         backgroundColor: "rgba(30,144,255,0.1)",
-        alignItems:'start',
-        flexDirection:"vertical",
+        alignItems:'flex-start',
+        flexDirection:"column",
         flex:1,
         borderRadius:10,
         marginTop:-9,
