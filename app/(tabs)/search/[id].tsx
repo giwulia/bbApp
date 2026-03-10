@@ -4,12 +4,13 @@ import { GameResponse } from '@/src/api/types';
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, StyleSheet, Text, View,Modal } from 'react-native';
 import { formatGameDate, formatTime } from "../../../src/utils/format";
 
 export default function Game() {
     const {id} = useLocalSearchParams<{id:string}>();
     const [game, setGame] = useState<GameResponse|null>(null)  // game === null from first render *
+    const [isPanelOpen, setIsPanelOpen] = useState(false)
     const [imgReady, setImgReady]= useState(false)
 
 
@@ -20,7 +21,7 @@ export default function Game() {
             setImgReady(false);
 
             const data = await getGame(id);
-            if (!data) return; 
+            if (!data) return;
             if (cancelled) return;  // if this effect is no longer valid, stop immediately
 
             setGame(data);
@@ -39,6 +40,8 @@ export default function Game() {
     }, [id]) //render again after id changes
 
     if (!game || !imgReady) return <Text> Loading game... </Text> // we need to define what to show on the first render *
+
+    const openPanel = () => setIsPanelOpen(true)
 
     return (
         <View style={{ flex: 1 }}>
@@ -85,12 +88,12 @@ export default function Game() {
                     </View>
                 <Text style={styles.mediumTitle}>THE TEAM</Text>
                 <View style={styles.mediumTeamCard}>
-                    <View style ={styles.teamCircleProfileGroup}>
+                    <Pressable style ={styles.teamCircleProfileGroup} onPress = {openPanel}>
                         <View style={[styles.teamCircleProfile, {marginLeft:15}]}/>
                         <View style={styles.teamCircleProfile}/>
                         <View style={styles.teamCircleProfile}/>
                         <View style={styles.teamCircleProfile}/>
-                    </View>
+                    </Pressable>
                     <Text style={[styles.gameInfo,{marginEnd:10}]}>{`${game.reserved_spots}/${game.total_spots} spots `}</Text>
                 </View>
                 <Text style={[styles.gameDescriptionTitle]}>DESCRIPTION</Text>
@@ -107,6 +110,18 @@ export default function Game() {
                     <Text style={styles.joinGameText}>Join Game</Text>
                 </Pressable>
             </View>
+            <Modal
+                visible = {isPanelOpen}
+                transparent
+                animationType ="slide"
+                onRequestClose = {() => setIsPanelOpen(false)}>
+                <View style = {{flex:1}}>
+                <Pressable style={styles.teamBackdrop} onPress={() => setIsPanelOpen(false)}/>
+                <View style={styles.teamPanel}>
+                    <View style={styles.teamPanelCircle}/>
+                </View>
+                </View>
+            </Modal>
         </View>
     )
 }
@@ -294,5 +309,26 @@ export const styles = StyleSheet.create({
         fontSize:13,
         fontWeight:"700",
         marginHorizontal:13
-    }
+    },
+    teamBackdrop: {
+        flex: 1,
+        backgroundColor: "rgba(0,0,0,0.4)"
+    },
+    teamPanel: {
+        position: "absolute",    //placed on top of the normal layout
+        bottom: 0,
+        width: "100%",
+        height:"70%",
+        backgroundColor: "white",
+        padding: 20,
+    },
+    teamPanelCircle:{
+        width: 48,           // circle diameter
+        height: 48,          // same as width
+        borderRadius: 24,    // half of width/height
+        backgroundColor: 'white',
+        borderColor:'rgba(128,128,128,0.5)',
+        borderWidth:1,
+        marginHorizontal:-2,
+    },
 })

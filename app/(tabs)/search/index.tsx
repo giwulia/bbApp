@@ -125,11 +125,12 @@ export default function Games() {
             const gameCity = (g.city ?? "").trim().toLowerCase()
             const gameGender = (g.gender ?? "").trim().toLowerCase()
             const gameDayT = formatDateFilter(g.date)
+            const gameOrganizer = (g.organizer.name ?? "").trim().toLowerCase()
 
             const matchesCity = !city || gameCity === city  //if city is empty string  then first condition is true
             const matchesLevel = !level || gameLevel === level;
             const matchesGender = !gender || gameGender === gender;
-            const matchesQuery = !q || gameTitle.includes(q) || gameLocation.includes(q);
+            const matchesQuery = !q || gameTitle.includes(q) || gameLocation.includes(q) || gameOrganizer.includes(q);
             const matchesDate = isMatchDate(gameDayT, filter)
             return matchesLevel && matchesQuery && matchesCity && matchesGender && matchesDate
             });
@@ -279,6 +280,7 @@ export const styles = StyleSheet.create({
     searchBarCard:{
         flexDirection: "row",
         alignItems:"center",
+        justifyContent:'space-between',
         marginBottom:16,
         height: 40,
         borderColor: "dodgerblue",
@@ -287,7 +289,7 @@ export const styles = StyleSheet.create({
         paddingHorizontal: 30,
     },
     searchBarText: {
-        paddingHorizontal:10,
+        paddingHorizontal:2,
         fontSize:13,
         fontWeight:"300",
         color:"black"
@@ -318,7 +320,6 @@ export const styles = StyleSheet.create({
         color: "dark-grey",
     },
     filterButton:{
-        marginLeft:160,
         padding: 8
     },
     filterBackdrop: {
