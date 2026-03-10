@@ -4,7 +4,7 @@ import { GameResponse } from '@/src/api/types';
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Image, Pressable, StyleSheet, Text, View,Modal } from 'react-native';
+import { Image, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { formatGameDate, formatTime } from "../../../src/utils/format";
 
 export default function Game() {

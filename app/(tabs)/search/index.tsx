@@ -1,20 +1,20 @@
+import { Feather, Ionicons } from "@expo/vector-icons";
+import { Link } from "expo-router";
+import { useEffect, useMemo, useState } from "react";
 import {
-    View,
-    Text,
-    Pressable,
-    StyleSheet,
+    ActivityIndicator,
     FlatList,
     Image,
+    Modal,
+    Pressable,
+    StyleSheet,
+    Text,
     TextInput,
-    ActivityIndicator,
-    Modal
-    } from "react-native";
-import { Link } from "expo-router";
-import { useEffect, useState, useMemo } from "react";
+    View
+} from "react-native";
 import { listGames } from "../../../src/api/client";
 import type { GameResponse, SkillLevel } from "../../../src/api/types";
-import { Ionicons, Feather } from "@expo/vector-icons";
-import {formatTime, formatGameDate, formatDateFilter } from "../../../src/utils/format";
+import { formatDateFilter, formatGameDate, formatTime } from "../../../src/utils/format";
 
 
 export default function Games() {
@@ -314,10 +314,10 @@ export const styles = StyleSheet.create({
         elevation: 3,
     },
     filterDateText:{
-        fontSize: 0,
+        fontSize: 10,
         fontWeight: "300",
         paddingHorizontal: 4,
-        color: "dark-grey",
+        color: "darkgray",
     },
     filterButton:{
         padding: 8
@@ -390,7 +390,7 @@ export const styles = StyleSheet.create({
         fontSize: 10.5,
         fontWeight: "300",
         paddingHorizontal: 4,
-        color: "dark-grey",
+        color: "darkgray",
     },
     gameCard: {
         flexDirection: "column",
