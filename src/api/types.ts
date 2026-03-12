@@ -86,5 +86,7 @@ export type CreateGameBody = {
     reserved_spots: number;
     price_per_spot: number;
 
-    position_slots: PositionSlots
+    position_slots: PositionSlots,
+    template_id: null,
+    teams: null
     };

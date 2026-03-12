@@ -5,10 +5,11 @@ export function listGames(query?: ListGamesQuery):Promise<GamesListResponse> {
     return mockGetGames(query)
 }
 
-export function createGame(body: CreateGameBody) : Promise<GameResponse> {
+export function createGames(body: CreateGameBody) : Promise<GameResponse> {
     return mockCreateGame(body)
 }
 
 export function getGame(id:string) :Promise<GameResponse |null> {
     return mockGetGameById(id)
 }
+
