@@ -1,4 +1,11 @@
 import ParallaxScrollView from '@/components/parallax-scroll-view';
+import { GestureHandlerRootView,Gesture, GestureDetector } from 'react-native-gesture-handler';
+import Animated, { 
+    useSharedValue, 
+    useAnimatedStyle, 
+    withSpring,
+    runOnJS
+} from 'react-native-reanimated';
 import { getGame } from '@/src/api/client';
 import { GameResponse } from '@/src/api/types';
 import { Ionicons } from "@expo/vector-icons";
@@ -10,7 +17,7 @@ import { formatGameDate, formatTime } from "../../../src/utils/format";
 export default function Game() {
     const {id} = useLocalSearchParams<{id:string}>();
     const [game, setGame] = useState<GameResponse|null>(null)  // game === null from first render *
-    const [isPanelOpen, setIsPanelOpen] = useState(false)
+    const [isTeamView, setIsTeamView] = useState(false)
     const [imgReady, setImgReady]= useState(false)
 
 
@@ -39,90 +46,141 @@ export default function Game() {
         }
     }, [id]) //render again after id changes
 
+    const translateX= useSharedValue(0);
+    const pan = Gesture.Pan()
+        .onChange((e) => {
+            if (e.translationX >0){
+                translateX.value=e.translationX
+            }
+        })
+        .onEnd((e) => {
+            if (e.translationX >100){
+                runOnJS(setIsTeamView)(false)
+                translateX.value=withSpring(0)
+            } else {
+                translateX.value = withSpring(0)
+            }
+        })
+
+    const animatedStyle= useAnimatedStyle(()=> ({
+        transform:[{ translateX: translateX.value}]
+    }))
+
     if (!game || !imgReady) return <Text> Loading game... </Text> // we need to define what to show on the first render *
 
-    const openPanel = () => setIsPanelOpen(true)
+    const showTeamView = () => setIsTeamView(true)
 
     return (
-        <View style={{ flex: 1 }}>
-            <ParallaxScrollView
-                headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-                headerImage={
-                <Image source={{ uri: game.img }} style={styles.gameImage} 
-                    onLoadEnd={()=> setImgReady(true)}
-                />
-            }>
-                <Text style={styles.gameTitle}>{game.title.toUpperCase()} </Text>
-                <View style = {[styles.gameInfoRow, {marginBottom:0}]}>
-                    {/*<Text style={styles.gameHost}>{game.organizer.name} I</Text>*/}
-                    <Text style={[styles.gameLevel]}>{game.level_required.toUpperCase()}</Text>
-                </View>
-                <View style={styles.gameDetailsRow}>
-                    <View style ={styles.gameInfoRow}>
-                        <Ionicons name="calendar-outline" size ={16} color ="gray"/>
-                        <Text style={styles.gameInfo}>{formatGameDate(game.date)}</Text>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+            <View style={{ flex: 1 }}>
+                <ParallaxScrollView
+                    headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
+                    headerImage={
+                    <Image source={{ uri: game.img }} style={styles.gameImage} 
+                        onLoadEnd={()=> setImgReady(true)}
+                    />
+                }>
+                    <Text style={styles.gameTitle}>{game.title.toUpperCase()} </Text>
+                    <View style = {[styles.gameInfoRow, {marginBottom:0}]}>
+                        {/*<Text style={styles.gameHost}>{game.organizer.name} I</Text>*/}
+                        <Text style={[styles.gameLevel]}>{game.level_required.toUpperCase()}</Text>
                     </View>
-                    <View style ={styles.gameInfoRow}>
-                        <Ionicons name="location" size ={16} color ="gray"/>
-                        <Text style={styles.gameInfo}>{game.location}</Text>
-                    </View>
-                </View>
-                <View style={styles.gameDetailsRow}>
-                    <View style ={styles.gameInfoRow}>
-                        <Ionicons name="time" size ={16} color ="gray"/>
-                        <Text style={styles.gameInfo}>{`${formatTime(game.start_time)}-${formatTime(game.end_time)}`}</Text>
-                    </View>
-                    <View style ={styles.gameInfoRow}>
-                        <Ionicons name="person" size ={16} color ="gray"/>
-                        <Text style={styles.gameInfo}>{game.gender.toUpperCase()}</Text>
-                    </View>
-                </View>
-                <View style={styles.horizontalLine}/>
-                <Text style={styles.mediumTitle}>THE HOST</Text>
-                    <View style={styles.mediumHostCard}>
-                        <View style={styles.hostSquareProfile}/>
-                        <View style ={styles.TextColumn}>
-                            <Text style={styles.gameHost}>{game.organizer.name.toUpperCase()}</Text>
-                            <Text style={[styles.gameHost, {color:'gray'}]}>{`${game.organizer.games_organized} GAMES HOSTED`}</Text>
+                    <View style={styles.gameDetailsRow}>
+                        <View style ={styles.gameInfoRow}>
+                            <Ionicons name="calendar-outline" size ={16} color ="gray"/>
+                            <Text style={styles.gameInfo}>{formatGameDate(game.date)}</Text>
+                        </View>
+                        <View style ={styles.gameInfoRow}>
+                            <Ionicons name="location" size ={16} color ="gray"/>
+                            <Text style={styles.gameInfo}>{game.location}</Text>
                         </View>
                     </View>
-                <Text style={styles.mediumTitle}>THE TEAM</Text>
-                <View style={styles.mediumTeamCard}>
-                    <Pressable style ={styles.teamCircleProfileGroup} onPress = {openPanel}>
-                        <View style={[styles.teamCircleProfile, {marginLeft:15}]}/>
-                        <View style={styles.teamCircleProfile}/>
-                        <View style={styles.teamCircleProfile}/>
-                        <View style={styles.teamCircleProfile}/>
+                    <View style={styles.gameDetailsRow}>
+                        <View style ={styles.gameInfoRow}>
+                            <Ionicons name="time" size ={16} color ="gray"/>
+                            <Text style={styles.gameInfo}>{`${formatTime(game.start_time)}-${formatTime(game.end_time)}`}</Text>
+                        </View>
+                        <View style ={styles.gameInfoRow}>
+                            <Ionicons name="person" size ={16} color ="gray"/>
+                            <Text style={styles.gameInfo}>{game.gender.toUpperCase()}</Text>
+                        </View>
+                    </View>
+                    <View style={styles.horizontalLine}/>
+                    {isTeamView? 
+                        <>
+                        <GestureDetector gesture={pan}>
+                            <Animated.View style={animatedStyle}>
+                                <View style={styles.teamPositionCard}>
+                                    <Text style={styles.mediumTitle}>SETTERS</Text>
+                                    <View style = {styles.teamPositionRow}>
+                                        <View style={styles.teamPositionProfile}/>
+                                    </View>
+                                </View>
+                                <View style={styles.teamPositionCard}>
+                                    <Text style={styles.mediumTitle}>OUTSIDES</Text>
+                                    <View style = {styles.teamPositionRow}>
+                                        <View style={styles.teamPositionProfile}/>
+                                    </View>
+                                </View>
+                                <View style={styles.teamPositionCard}>
+                                    <Text style={styles.mediumTitle}>MIDDLES</Text>
+                                    <View style = {styles.teamPositionRow}>
+                                        <View style={styles.teamPositionProfile}/>
+                                    </View>
+                                </View>
+                                <View style={styles.teamPositionCard}>
+                                    <Text style={styles.mediumTitle}>OPPOSITES</Text>
+                                    <View style = {styles.teamPositionRow}>
+                                        <View style={styles.teamPositionProfile}/>
+                                    </View>
+                                </View>
+                                <View style={styles.teamPositionCard}>
+                                    <Text style={styles.mediumTitle}>LIBEROS</Text>
+                                    <View style = {styles.teamPositionRow}>
+                                        <View style={styles.teamPositionProfile}/>
+                                    </View>
+                                </View>
+                            </Animated.View>
+                        </GestureDetector>
+                        </>
+                    :
+                        <>
+                            <Text style={styles.mediumTitle}>THE HOST</Text>
+                                <View style={styles.mediumHostCard}>
+                                    <View style={styles.hostSquareProfile}/>
+                                    <View style ={styles.mediumHostText}>
+                                        <Text style={styles.gameHost}>{game.organizer.name.toUpperCase()}</Text>
+                                        <Text style={[styles.gameHost, {color:'gray'}]}>{`${game.organizer.games_organized} GAMES HOSTED`}</Text>
+                                    </View>
+                                </View>
+                            <Text style={styles.mediumTitle}>THE TEAM</Text>
+                            <View style={styles.mediumTeamCard}>
+                                <Pressable style ={styles.teamCircleProfileGroup} onPress = {showTeamView}>
+                                    <View style={[styles.teamCircleProfile, {marginLeft:15}]}/>
+                                    <View style={styles.teamCircleProfile}/>
+                                    <View style={styles.teamCircleProfile}/>
+                                    <View style={styles.teamCircleProfile}/>
+                                </Pressable>
+                                <Text style={[styles.gameInfo,{marginEnd:10}]}>{`${game.reserved_spots}/${game.total_spots} spots `}</Text>
+                            </View>
+                            <Text style={[styles.gameDescriptionTitle]}>DESCRIPTION</Text>
+                            <View style = {styles.gameDescriptionCard}>
+                                <Text style={styles.gameDescription}>{game.description} </Text>
+                            </View>
+                        </>
+                    }
+                </ParallaxScrollView>
+                <View style = {styles.joinGameCard}>
+                    <View style = {{flexDirection:'column'}}>
+                        <Text style={styles.priceText}>SINGLE ENTRY</Text>
+                        <Text style={styles.priceText}>{`£${game.price_per_spot}`}</Text>
+                    </View>
+                    <Pressable style={styles.joinGameButton}>
+                        <Text style={styles.joinGameText}>Join Game</Text>
                     </Pressable>
-                    <Text style={[styles.gameInfo,{marginEnd:10}]}>{`${game.reserved_spots}/${game.total_spots} spots `}</Text>
                 </View>
-                <Text style={[styles.gameDescriptionTitle]}>DESCRIPTION</Text>
-                <View style = {styles.gameDescriptionCard}>
-                    <Text style={styles.gameDescription}>{game.description} </Text>
-                </View>
-            </ParallaxScrollView>
-            <View style = {styles.joinGameCard}>
-                <View style = {{flexDirection:'column'}}>
-                    <Text style={styles.priceText}>SINGLE ENTRY</Text>
-                    <Text style={styles.priceText}>{`£${game.price_per_spot}`}</Text>
-                </View>
-                <Pressable style={styles.joinGameButton}>
-                    <Text style={styles.joinGameText}>Join Game</Text>
-                </Pressable>
             </View>
-            <Modal
-                visible = {isPanelOpen}
-                transparent
-                animationType ="slide"
-                onRequestClose = {() => setIsPanelOpen(false)}>
-                <View style = {{flex:1}}>
-                <Pressable style={styles.teamBackdrop} onPress={() => setIsPanelOpen(false)}/>
-                <View style={styles.teamPanel}>
-                    <View style={styles.teamPanelCircle}/>
-                </View>
-                </View>
-            </Modal>
-        </View>
+        </GestureHandlerRootView>
     )
 }
 
@@ -136,7 +194,7 @@ export const styles = StyleSheet.create({
         height:1,
         backgroundColor:'silver',
         marginTop:2,
-        marginBottom:2,
+        marginBottom:10,
         width:'100%'
     },
     gameTitle: {
@@ -217,7 +275,7 @@ export const styles = StyleSheet.create({
         backgroundColor: 'white',
         borderColor:'rgba(128,128,128,0.5)',
         borderWidth:1,
-        marginInlineStart:15
+        marginLeft:15
     },
     mediumTeamCard:{
         backgroundColor: "rgba(30,144,255,0.1)",
@@ -261,7 +319,7 @@ export const styles = StyleSheet.create({
         fontSize:18,
         fontWeight: "600",
         color: "dark-grey",
-        marginTop:7,
+        marginTop:5,
         marginStart:0
     },
     joinGameCard:{
@@ -286,7 +344,7 @@ export const styles = StyleSheet.create({
         marginBottom:1,
         marginTop:3
     },
-    TextColumn:{
+    mediumHostText:{
         flexDirection:'column',
         justifyContent: 'center',
         flex:1
@@ -318,17 +376,29 @@ export const styles = StyleSheet.create({
         position: "absolute",    //placed on top of the normal layout
         bottom: 0,
         width: "100%",
-        height:"70%",
+        height:"80%",
         backgroundColor: "white",
         padding: 20,
     },
-    teamPanelCircle:{
-        width: 48,           // circle diameter
-        height: 48,          // same as width
-        borderRadius: 24,    // half of width/height
+    teamPositionProfile:{
+        width: 40,           // circle diameter
+        height: 40,          // same as width
+        borderRadius: 6,    // half of width/height
         backgroundColor: 'white',
         borderColor:'rgba(128,128,128,0.5)',
         borderWidth:1,
         marginHorizontal:-2,
+    },
+    teamPositionCard:{
+        alignItems:'flex-start',
+        flexDirection:"column",
+        marginTop:2,
+        marginBottom:13
+    },
+    teamPositionRow:{
+        alignItems:'center',
+        flexDirection:"row",
+        marginTop:10,
+        marginLeft:3
     },
 })

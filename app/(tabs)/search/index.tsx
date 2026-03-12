@@ -302,22 +302,22 @@ export const styles = StyleSheet.create({
         marginBottom:8
     },
     filterDateButton:{
-        paddingVertical: 5,
+        paddingVertical: 6,
         paddingHorizontal: 12,
         borderRadius: 999,
     },
     filterSelectedDateButton:{
-        backgroundColor: "rgba(30,144,255,0.3)",
+        backgroundColor: "rgba(30,144,255,0.2)",
         shadowColor: "#1E90FF",
         shadowOpacity: 0.3,
         shadowRadius: 4,
         elevation: 3,
     },
     filterDateText:{
-        fontSize: 10,
-        fontWeight: "300",
+        fontSize: 12,
+        fontWeight: "400",
         paddingHorizontal: 4,
-        color: "darkgray",
+        color: "dimgray",
     },
     filterButton:{
         padding: 8
@@ -352,7 +352,7 @@ export const styles = StyleSheet.create({
         marginBottom:6
     },
     gameHost: {
-        fontSize: 11,
+        fontSize: 12,
         fontWeight: "300",
         paddingHorizontal: 1,
         paddingTop:6,
@@ -360,7 +360,7 @@ export const styles = StyleSheet.create({
         color: "black",
     },
     gameLevel: {
-        fontSize: 10.5,
+        fontSize: 11,
         fontWeight: "500",
         paddingHorizontal: 2,
         paddingTop:6,
@@ -368,11 +368,11 @@ export const styles = StyleSheet.create({
         color: "dodgerblue",
     },
     gameTitle: {
-        fontSize: 13,
+        fontSize: 13.5,
         fontWeight: "500",
         paddingHorizontal: 15,
         paddingTop:0,
-        marginBottom: 8,
+        marginBottom: 10,
         color: "black",
     },
     gameInfoRow: {
@@ -387,10 +387,10 @@ export const styles = StyleSheet.create({
         marginBottom:4
     },
     gameInfo: {
-        fontSize: 10.5,
+        fontSize: 11,
         fontWeight: "300",
-        paddingHorizontal: 4,
-        color: "darkgray",
+        paddingHorizontal: 6,
+        color: "dimgray",
     },
     gameCard: {
         flexDirection: "column",
