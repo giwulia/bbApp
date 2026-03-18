@@ -283,7 +283,7 @@ export const styles = StyleSheet.create({
         justifyContent:'space-between',
         marginBottom:16,
         height: 40,
-        borderColor: "dodgerblue",
+        borderColor: "#D81159",
         borderRadius: 25,
         borderWidth: 1,
         paddingHorizontal: 30,
@@ -307,17 +307,15 @@ export const styles = StyleSheet.create({
         borderRadius: 999,
     },
     filterSelectedDateButton:{
-        backgroundColor: "rgba(30,144,255,0.2)",
-        shadowColor: "#1E90FF",
-        shadowOpacity: 0.3,
-        shadowRadius: 4,
-        elevation: 3,
+        backgroundColor: "#f7b5cb",
+        shadowColor: "#D81159"
+
     },
     filterDateText:{
-        fontSize: 12,
+        fontSize: 13,
         fontWeight: "400",
         paddingHorizontal: 4,
-        color: "dimgray",
+        color: "#27253F",
     },
     filterButton:{
         padding: 8
@@ -353,11 +351,11 @@ export const styles = StyleSheet.create({
     },
     gameHost: {
         fontSize: 12,
-        fontWeight: "300",
+        fontWeight: "400",
         paddingHorizontal: 1,
         paddingTop:6,
         marginBottom: 8,
-        color: "black",
+        color: "#27253F",
     },
     gameLevel: {
         fontSize: 11,
@@ -365,7 +363,7 @@ export const styles = StyleSheet.create({
         paddingHorizontal: 2,
         paddingTop:6,
         marginBottom: 8,
-        color: "dodgerblue",
+        color: "#D81159",
     },
     gameTitle: {
         fontSize: 13.5,

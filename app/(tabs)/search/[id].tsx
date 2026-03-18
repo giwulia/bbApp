@@ -150,7 +150,7 @@ export default function Game() {
                                     <View style={styles.hostSquareProfile}/>
                                     <View style ={styles.mediumHostText}>
                                         <Text style={styles.gameHost}>{game.organizer.name.toUpperCase()}</Text>
-                                        <Text style={[styles.gameHost, {color:'gray'}]}>{`${game.organizer.games_organized} GAMES HOSTED`}</Text>
+                                        <Text style={[styles.gameHost, {color: "#D81159"}]}>{`${game.organizer.games_organized} GAMES HOSTED`}</Text>
                                     </View>
                                 </View>
                             <Text style={styles.mediumTitle}>THE TEAM</Text>
@@ -209,7 +209,7 @@ export const styles = StyleSheet.create({
     },
     gameHost: {
         fontSize: 11,
-        fontWeight: "500",
+        fontWeight: "600",
         marginBottom: 2,
         marginTop:2,
         color: "dark-grey",
@@ -220,7 +220,7 @@ export const styles = StyleSheet.create({
         fontWeight: "500",
         paddingHorizontal: 2,
         marginBottom: 6,
-        color: "dodgerblue",
+        color: "#D81159",
         marginTop:-6
     },
     gameInfoRow: {
@@ -258,10 +258,10 @@ export const styles = StyleSheet.create({
     mediumTitle:{
         fontSize: 13,
         fontWeight: "700",
-        color: "dark-grey"
+        color: "#27253F"
     },
     mediumHostCard:{
-        backgroundColor: "rgba(30,144,255,0.1)",
+        backgroundColor: "#ecf1f5",
         alignItems:'center',
         flexDirection:"row",
         height:50,
@@ -278,7 +278,7 @@ export const styles = StyleSheet.create({
         marginLeft:15
     },
     mediumTeamCard:{
-        backgroundColor: "rgba(30,144,255,0.1)",
+        backgroundColor: "#ecf1f5",
         flexDirection:"row",
         height:50,
         alignItems:'center',
@@ -300,7 +300,7 @@ export const styles = StyleSheet.create({
         alignItems:'center'
     },
     gameDescriptionCard: {
-        backgroundColor: "rgba(30,144,255,0.1)",
+        backgroundColor: "#ecf1f5",
         alignItems:'flex-start',
         flexDirection:"column",
         flex:1,
@@ -316,10 +316,10 @@ export const styles = StyleSheet.create({
         marginBottom:10
     },
     gameDescriptionTitle: {
-        fontSize:18,
-        fontWeight: "600",
-        color: "dark-grey",
-        marginTop:5,
+        fontSize:13,
+        fontWeight: "700",
+        color: "#27253F",
+        marginTop:10,
         marginStart:0
     },
     joinGameCard:{
@@ -329,10 +329,7 @@ export const styles = StyleSheet.create({
         borderRadius: 15,
         paddingVertical: 5,
         marginHorizontal:15,
-        backgroundColor: "#1c1f26" ,
-        shadowColor: "#1E90FF",
-        shadowOpacity: 0.3,
-        shadowRadius: 4,
+        backgroundColor: "#27253F" ,
         elevation: 3,
         height:48,
     },
@@ -355,8 +352,8 @@ export const styles = StyleSheet.create({
         paddingVertical: 8,
         paddingHorizontal: 12,
         marginHorizontal:15,
-        backgroundColor: "rgba(30,144,255,1)",
-        shadowColor: "#1E90FF",
+        backgroundColor: "#D81159",
+        shadowColor: "#D81159",
         shadowOpacity: 0.3,
         shadowRadius: 4,
         elevation: 3,
