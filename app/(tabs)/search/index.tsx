@@ -1,4 +1,5 @@
-import { Feather, Ionicons } from "@expo/vector-icons";
+import { Feather, Ionicons} from "@expo/vector-icons";
+import { Search, Filter, Settings2} from 'lucide-react-native'
 import { Link } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -151,15 +152,17 @@ export default function Games() {
     return (
         <View style={styles.layout}>
             <View style ={styles.searchBarCard}>
-                <Feather name='search' size={15}/>
-                <TextInput
-                    style={styles.searchBarText}
-                    value={query}
-                    onChangeText={setQuery}
-                    placeholder="Search games"
-                />
+                <View style ={styles.searchBarRightSide}>
+                    <Feather name='search' size={17}/>
+                    <TextInput
+                        style={styles.searchBarText}
+                        value={query}
+                        onChangeText={setQuery}
+                        placeholder="Search games"
+                    />
+                </View>
                 <Pressable onPress = {openPanel} style={styles.filterButton}>
-                    <Ionicons name="filter" size={20} />
+                    <Settings2 size={15} color="white"/>
                 </Pressable>
             </View>
             <View style = {styles.filterDatesRow}>
@@ -282,16 +285,22 @@ export const styles = StyleSheet.create({
         alignItems:"center",
         justifyContent:'space-between',
         marginBottom:16,
-        height: 40,
-        borderColor: "#D81159",
+        height: 44,
+        borderColor: "white",
+        backgroundColor:'white',
         borderRadius: 25,
         borderWidth: 1,
-        paddingHorizontal: 30,
+        paddingHorizontal: 22,
+    },
+    searchBarRightSide:{
+        flexDirection:'row',
+        alignItems:'center',
+        justifyContent:'flex-start'
     },
     searchBarText: {
-        paddingHorizontal:2,
+        paddingHorizontal:12,
         fontSize:13,
-        fontWeight:"300",
+        fontWeight:"500",
         color:"black"
     },
     filterDatesRow:{
@@ -309,7 +318,6 @@ export const styles = StyleSheet.create({
     filterSelectedDateButton:{
         backgroundColor: "#f7b5cb",
         shadowColor: "#D81159"
-
     },
     filterDateText:{
         fontSize: 13,
@@ -318,7 +326,12 @@ export const styles = StyleSheet.create({
         color: "#27253F",
     },
     filterButton:{
-        padding: 8
+        width: 25,
+        height: 25,
+        borderRadius: 16,
+        backgroundColor: '#D81159',
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     filterBackdrop: {
         flex: 1,
@@ -358,7 +371,7 @@ export const styles = StyleSheet.create({
         color: "#27253F",
     },
     gameLevel: {
-        fontSize: 11,
+        fontSize: 11.5,
         fontWeight: "500",
         paddingHorizontal: 2,
         paddingTop:6,
