@@ -38,7 +38,8 @@ let games: GameResponse[] = [
         organizer_id: organizer1.id,
         organizer: organizer1,
         title: "Tuesday Night Volleyball",
-        description: "Only sign up if you are Mid to Upper Intermediate/ Advanced Level Player and Knowlegeable of 5:1 Rotations. Our goal is to have a good time, enjoy the company of friendly people and play some competitive games. Remember 'Every Serve is a Point'",
+        description:
+            "Only sign up if you are Mid to Upper Intermediate/ Advanced Level Player and Knowlegeable of 5:1 Rotations. Our goal is to have a good time, enjoy the company of friendly people and play some competitive games. Remember 'Every Serve is a Point'",
         img: "https://images.pexels.com/photos/6203581/pexels-photo-6203581.jpeg",
         type: "game",
         level_required: "intermediate",
@@ -47,25 +48,53 @@ let games: GameResponse[] = [
         start_time: "19:00:00",
         end_time: "21:00:00",
         location: "UEL SportsDock",
+        location_url: "https://www.google.com/maps?q=UEL+SportsDock+London",
         location_details: "Court 3",
         city: "London",
         total_spots: 12,
         reserved_spots: 5,
-        price_per_spot: 12.50,
+        price_per_spot: 12.5,
         position_slots: { setter: 2, outside: 4, middle: 2, opposite: 2, libero: 2 },
         status: "open",
-        spots_taken: 0,
+        spots_taken: 3,
+        players: [
+            {
+                user_id: "u1",
+                username: "spike_master",
+                name: "Alex Turner",
+                position: "outside",
+                team_assignment: "A",
+                status: "confirmed",
+            },
+            {
+                user_id: "u2",
+                username: "set_god",
+                name: "Chris Wong",
+                position: "setter",
+                team_assignment: "B",
+                status: "confirmed",
+            },
+            {
+                user_id: "u3",
+                username: "libero_queen",
+                name: "Sophie Khan",
+                position: "libero",
+                team_assignment: null,
+                status: "pending",
+            },
+    ],
         created_at: "2026-02-01T12:00:00Z",
-        updated_at: "2026-02-01T12:00:00Z"
+        updated_at: "2026-02-01T12:00:00Z",
     },
     {
         id: "G002",
         organizer_id: organizer2.id,
         organizer: organizer2,
         title: "Saturday Social VB",
-        description:"Come and play in a Saturday afternoon Lower-Intermediate volleyball session in Whitechapel 🔥\n\n" +
-        "❗️This session is not for beginners. Please be considerate & only sign up to this game if you’re a Lower-INTERMEDIATE player or above. If you’re a beginner please sign up to a mixed ability session❗️\n\n" +
-        "💦 Water fountain, showers & changing rooms on site",
+        description:
+            "Come and play in a Saturday afternoon Lower-Intermediate volleyball session in Whitechapel 🔥\n\n" +
+            "❗️This session is not for beginners. Please be considerate & only sign up to this game if you’re a Lower-INTERMEDIATE player or above. If you’re a beginner please sign up to a mixed ability session❗️\n\n" +
+            "💦 Water fountain, showers & changing rooms on site",
         img: "https://thumbs.dreamstime.com/b/volleyball-rests-polished-wood-court-floor-empty-stadium-arena-blue-seats-fill-background-basketball-hoop-visible-beyond-418853182.jpg",
         type: "game",
         level_required: "beginner",
@@ -74,17 +103,67 @@ let games: GameResponse[] = [
         start_time: "14:00:00",
         end_time: "16:00:00",
         location: "Score Centre",
+        location_url: "https://www.google.com/maps?q=Score+Centre+Leyton+London",
         location_details: "Court 1",
         city: "London",
         total_spots: 18,
         reserved_spots: 12,
         price_per_spot: 15,
-        position_slots: { setter: 3, outside: 6, middle: 3, opposite: 3, libero: 3},
+        position_slots: { setter: 3, outside: 6, middle: 3, opposite: 3, libero: 3 },
         status: "open",
-        spots_taken: 2,
-
+        spots_taken: 5,
+        players: [
+            {
+                user_id: "u4",
+                username: "jumpserve99",
+                name: "Daniel Smith",
+                position: "outside",
+                team_assignment: "A",
+                status: "confirmed",
+            },
+            {
+                user_id: "u5",
+                username: "quick_middle",
+                name: "Emma Brown",
+                position: "middle",
+                team_assignment: "B",
+                status: "confirmed",
+            },
+            {
+                user_id: "utest",
+                username: "jojo",
+                name: "Jolyene J",
+                position: "outside",
+                team_assignment: "B",
+                status: "confirmed",
+            },
+            {
+                user_id: "u6",
+                username: "setter_life",
+                name: "Luca Rossi",
+                position: "setter",
+                team_assignment: null,
+                status: "pending",
+            },
+            {
+                user_id: "u7",
+                username: "dig_machine",
+                name: "Maya Patel",
+                position: "libero",
+                team_assignment: "A",
+                status: "confirmed",
+            },
+            {
+                user_id: "u8",
+                username: "right_side",
+                name: "Noah Wilson",
+                position: "opposite",
+                team_assignment: null,
+                status: "pending",
+            },
+        ],
         created_at: isoNow(),
-        updated_at: isoNow()
+        updated_at: isoNow(),
     },
     {
         id: "G003",
@@ -104,6 +183,7 @@ let games: GameResponse[] = [
         start_time: "19:00:00",
         end_time: "21:00:00",
         location: "National Volleyball Centre",
+        location_url: "https://www.google.com/maps?q=National+Volleyball+Centre+Manchester",
         location_details: "Court 2",
         city: "Manchester",
         total_spots: 12,
@@ -112,11 +192,44 @@ let games: GameResponse[] = [
         position_slots: { setter: 2, outside: 4, middle: 2, opposite: 2, libero: 2 },
         status: "open",
         spots_taken: 4,
-
+        players: [
+            {
+                user_id: "u9",
+                username: "power_spiker",
+                name: "James Taylor",
+                position: "outside",
+                team_assignment: "A",
+                status: "confirmed",
+            },
+            {
+                user_id: "u10",
+                username: "block_master",
+                name: "Olivia Green",
+                position: "middle",
+                team_assignment: "B",
+                status: "confirmed",
+            },
+            {
+                user_id: "u11",
+                username: "elite_setter",
+                name: "Ethan Clark",
+                position: "setter",
+                team_assignment: "A",
+                status: "confirmed",
+            },
+            {
+                user_id: "u12",
+                username: "defense_pro",
+                name: "Ava Johnson",
+                position: "libero",
+                team_assignment: null,
+                status: "pending",
+            },
+        ],
         created_at: isoNow(),
-        updated_at: isoNow()
-    }
-]
+        updated_at: isoNow(),
+        },
+];
 
 function sanitizeCreateBody(body: CreateGameBody): CreateGameBody {
     // For drills, position_slots should be null (matches API.md behaviour).
@@ -169,9 +282,12 @@ export async function mockCreateGame(
         organizer,
         ...sanitized,
         img:
-        sanitized.img ?? "https://www.google.com/url?sa=t&source=web&rct=j&url=https%3A%2F%2Fwww.dreamstime.com%2Fdefault-image-icon-vector-missing-picture-page-website-design-mobile-app-no-photo-available-image236105299&ved=0CBYQjRxqFwoTCNCgoJ_K6JIDFQAAAAAdAAAAABAH&opi=89978449",
+        sanitized.img ?? "https://images.pexels.com/photos/6203581/pexels-photo-6203581.jpeg",
         status: "open",
         spots_taken: 0,
+          players: [],
+        reserved_spots: 0,
+        location_url: sanitized.location_url ?? "",
         created_at : now,
         updated_at : now
     }

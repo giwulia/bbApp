@@ -81,6 +81,18 @@ export default function Games() {
         }))
     }
 
+    const resetFilters =() => {
+        setFilters({
+            sport: "",
+            city: "",
+            level: "",
+            gender: "",
+            datePreset: "",
+            date: null,
+        })
+        setDate("")
+    }
+
     const filteredGames = useMemo(() => {
         const q = query.trim().toLowerCase();
         const level = filters.level;
@@ -165,6 +177,25 @@ export default function Games() {
                     <Settings2 size={15} color="white"/>
                 </Pressable>
             </View>
+            {(filters.city || filters.level || filters.gender) && (
+                <View style={styles.activeFiltersRow}>
+                    {filters.city && (
+                         <Pressable style={styles.activeFiltersBox} onPress={() => selectCity(filters.city)}>
+                            <Text style={styles.activeFilterText}>{filters.city.toUpperCase()}  ✕</Text>
+                        </Pressable>
+                    )}
+                    {filters.level && (
+                        <Pressable style={styles.activeFiltersBox} onPress={()=> selectLevel(filters.level as SkillLevel)}>
+                            <Text style={styles.activeFilterText}>{filters.level.toUpperCase()}  ✕</Text>
+                        </Pressable>
+                    )}
+                    {filters.gender && (
+                        <Pressable style={styles.activeFiltersBox} onPress={() => selectGender(filters.gender)}>
+                            <Text style={styles.activeFilterText}>{filters.gender.toUpperCase()}  ✕</Text>
+                        </Pressable>
+                    )}
+                </View>
+            )}
             <View style = {styles.filterDatesRow}>
                 <Pressable onPress={()=> selectDate("Anytime")} style={[styles.filterDateButton, date ==="Anytime" && styles.filterSelectedDateButton]}>
                     <Text style={styles.filterDateText}>Anytime</Text>
@@ -234,32 +265,39 @@ export default function Games() {
                         <View style = {{flex:1}}>
                             <Pressable style={styles.filterBackdrop} onPress={() => setIsPanelOpen(false)}/>
                             <View style={styles.filterPanel}>
-                            <Text style ={{paddingTop: 70, paddingHorizontal: 10, fontSize: 15, fontWeight: "600", paddingBottom:20}}>
-                                Filters</Text>
-                                <Text> City</Text>
-                                <View style = {styles.filterPanelTabs}>
-                                    {cities.map(item=> (
-                                        <Pressable key={item} onPress={() => selectCity(item)}>
-                                        <Text> {item} </Text>
-                                        </Pressable>
-                                    ))}
-                                </View>
-                                <Text> Skill Level </Text>
-                                <View style = {styles.filterPanelTabs}>
-                                    {skillLevels.map(item=> (
-                                        <Pressable key={item} onPress={() => selectLevel(item)}>
-                                        <Text> {item} </Text>
-                                        </Pressable>
-                                    ))}
-                                </View>
-                                <Text> Gender </Text>
-                                <View style = {styles.filterPanelTabs}>
-                                    {gender.map(item=> (
-                                        <Pressable key={item} onPress={() => selectGender(item)}>
-                                        <Text> {item} </Text>
-                                        </Pressable>
-                                    ))}
-                                </View>
+                                <Text style={[styles.filterPanelTitle, {marginTop:2}]}>GENDER</Text>
+                                    <View style={styles.filterPanelRows}>
+                                        {gender.map(item => (
+                                            <Pressable key={item} onPress={() => selectGender(item)}>
+                                                <View style={[styles.filterPanelOptions, filters.gender === item && styles.filterPanelOptionsSelected]}>
+                                                    <Text style={styles.filterPanelOptionsText}>{item.toUpperCase()}</Text>
+                                                </View>
+                                            </Pressable>
+                                        ))}
+                                    </View>
+                                    <Text style={styles.filterPanelTitle}>SKILL LEVEL</Text>
+                                    <View style={styles.filterPanelRows}>
+                                        {skillLevels.map(item => (
+                                            <Pressable key={item} onPress={() => selectLevel(item)}>
+                                                <View style={[styles.filterPanelOptions, filters.level === item && styles.filterPanelOptionsSelected]}>
+                                                    <Text style={styles.filterPanelOptionsText}>{item.toUpperCase()}</Text>
+                                                </View>
+                                            </Pressable>
+                                        ))}
+                                    </View>
+                                    <Text style={styles.filterPanelTitle}>CITY</Text>
+                                    <View style={styles.filterPanelRows}>
+                                        {cities.map(item => (
+                                            <Pressable key={item} onPress={() => selectCity(item)}>
+                                                <View style={[styles.filterPanelOptions, filters.city === item && styles.filterPanelOptionsSelected]}>
+                                                    <Text style={styles.filterPanelOptionsText}>{item.toUpperCase()}</Text>
+                                                </View>
+                                            </Pressable>
+                                        ))}
+                                    </View>
+                                    <Pressable style={styles.filterPanelResetButton} onPress={resetFilters}>
+                                        <Text style={styles.filterPanelResetText}>RESET ALL</Text>
+                                    </Pressable>
                             </View>
                         </View>
                 </Modal>
@@ -286,9 +324,9 @@ export const styles = StyleSheet.create({
         justifyContent:'space-between',
         marginBottom:16,
         height: 44,
-        borderColor: "white",
+        borderColor: "#e0e0e0",
         backgroundColor:'white',
-        borderRadius: 25,
+        borderRadius: 15,
         borderWidth: 1,
         paddingHorizontal: 22,
     },
@@ -306,7 +344,7 @@ export const styles = StyleSheet.create({
     filterDatesRow:{
         flexDirection:'row',
         justifyContent: 'space-between',
-        paddingHorizontal:10,
+        paddingHorizontal:0,
         marginRight:10,
         marginBottom:8
     },
@@ -340,22 +378,80 @@ export const styles = StyleSheet.create({
     filterPanel: {
         position: "absolute",    //placed on top of the normal layout
         right: 0,
-        top: 0,
-        bottom: 0,
-        width: "60%",
+        top: 130,
+        left: 0,
         backgroundColor: "white",
         padding: 20,
+        borderRadius: 15,
+        paddingHorizontal: 22,
+        marginHorizontal:20,
+        height:500,
+        flex:1,
     },
-    filterPanelTabs:{
+    filterPanelRows:{
         flexDirection: "row",
-        backgroundColor: "white",
-        borderRadius: 12,
-        paddingBottom:15
+        paddingBottom:15,
+        flexWrap: 'wrap',
+        gap: 8,
+    },
+    filterPanelOptions:{
+        borderRadius: 10,
+        borderColor: 'silver',
+        borderWidth: 1,
+        paddingHorizontal: 13,
+        paddingVertical: 7,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    filterPanelOptionsSelected:{
+        backgroundColor: '#f7b5cb',
+        borderColor:'#f7b5cb'
+    },
+    filterPanelOptionsText:{
+        fontSize: 12,
+        fontWeight: "400",
+        color: '#27253F',
+        textAlign: 'center',
+    },
+    filterPanelTitle:{
+        fontSize:15,
+        marginBottom:7,
+        marginTop:15,
+        fontWeight:500,
+        color:'#27253F'
+    },
+    filterPanelResetButton:{
+        marginTop: 'auto',
+        alignSelf: 'flex-start',
+        paddingVertical: 8,
+    },
+    filterPanelResetText:{
+        fontSize: 13,
+        color: '#D81159',
+        fontWeight: '500',
     },
     filterPanelDropdown:{
         flexDirection: "row",
         backgroundColor: "white",
         borderRadius: 12
+    },
+    activeFiltersRow:{
+        flexDirection: "row",
+        paddingBottom:12,
+        flexWrap: 'wrap',
+        gap: 8,
+    },
+    activeFiltersBox:{
+        borderRadius: 16,
+        paddingHorizontal: 13,
+        paddingVertical: 5,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor:'#27253F'
+    },
+    activeFilterText:{
+        fontSize:12,
+        color:'white'
     },
     gameImage: {
         width: '100%',

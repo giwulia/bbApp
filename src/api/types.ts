@@ -30,6 +30,7 @@ export type GameResponse = {
     end_time: string;
 
     location: string;
+    location_url: string;
     location_details?: string;
     city?: string;
     gender: GameGender;
@@ -43,8 +44,20 @@ export type GameResponse = {
     status: GameStatus;
     spots_taken: number;
 
+    players:Player[];
+
     created_at: string;
     updated_at: string;
+};
+
+
+export type Player = {
+    user_id: string;
+    username:string;
+    name: string;
+    position:string;
+    team_assignment: string | null
+    status: string
 };
 
 export type ListGamesQuery = Partial<{
@@ -77,6 +90,7 @@ export type CreateGameBody = {
     img?:string;
 
     location: string;
+    location_url: string;
     location_details?: string;
     city?: string;
 

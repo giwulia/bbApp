@@ -78,7 +78,7 @@ export default function createGame() {
 
 
     return (
-        <View style={{ flex: 1 }}>
+        <View style={[{backgroundColor:'white'},{ flex: 1 }]}>
             <KeyboardAvoidingView
             style={{flex:1}}
             behavior={Platform.OS === 'ios'? 'padding':'height'}
@@ -100,7 +100,7 @@ export default function createGame() {
                                 ))}
                             </View>
                     </View>
-                    <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: 60 }}>
+                    <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: 120 }}>
                         <View style={styles.layout}>
 
                             {step === 1 && (

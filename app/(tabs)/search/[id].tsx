@@ -1,5 +1,5 @@
 import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { GestureHandlerRootView,Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { GestureHandlerRootView,Gesture, GestureDetector, ScrollView } from 'react-native-gesture-handler';
 import Animated, { 
     useSharedValue, 
     useAnimatedStyle, 
@@ -11,8 +11,9 @@ import { GameResponse } from '@/src/api/types';
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Image, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Image, Modal, Pressable, StyleSheet, Text, View, Dimensions } from 'react-native';
 import { formatGameDate, formatTime } from "../../../src/utils/format";
+import { AlignCenter } from 'lucide-react-native';
 
 export default function Game() {
     const {id} = useLocalSearchParams<{id:string}>();
@@ -47,20 +48,21 @@ export default function Game() {
     }, [id]) //render again after id changes
 
     const translateX= useSharedValue(0);
+    const screenWidth = Dimensions.get('window').width;
     const pan = Gesture.Pan()
         .onChange((e) => {
-            if (e.translationX >0){
-                translateX.value=e.translationX
-            }
+            translateX.value = e.translationX
         })
         .onEnd((e) => {
-            if (e.translationX >100){
-                runOnJS(setIsTeamView)(false)
-                translateX.value=withSpring(0)
+                if (e.translationX > screenWidth / 4) {
+            // user swiped more than half the screen → go back
+            runOnJS(setIsTeamView)(false);
+            translateX.value = withSpring(screenWidth); // optional: animate to full page width
             } else {
-                translateX.value = withSpring(0)
+            // snap back to start
+            translateX.value = withSpring(0);
             }
-        })
+        }).failOffsetY([-5,5])
 
     const animatedStyle= useAnimatedStyle(()=> ({
         transform:[{ translateX: translateX.value}]
@@ -107,42 +109,83 @@ export default function Game() {
                     </View>
                     <View style={styles.horizontalLine}/>
                     {isTeamView? 
-                        <>
-                        <GestureDetector gesture={pan}>
+                        <GestureDetector gesture={Gesture.Simultaneous(pan)}>
+                            <ScrollView style={{ flex: 1 }}>
                             <Animated.View style={animatedStyle}>
                                 <View style={styles.teamPositionCard}>
-                                    <Text style={styles.mediumTitle}>SETTERS</Text>
+                                    <Text style={styles.teamMediumTitleCentered}>SETTERS</Text>
                                     <View style = {styles.teamPositionRow}>
-                                        <View style={styles.teamPositionProfile}/>
+                                        {Array.from({length:game.position_slots?.setter ?? 0},(_,i) => {
+                                            const player = game.players.filter(p=> p.position === 'setter')[i];
+                                            return (
+                                                 <View style = {styles.teamPositionProfileSet}>
+                                                     <View style={styles.teamPositionProfile}/>
+                                                    <Text style={styles.teamPositionName}>{player ? player.name.split(" ")[0] : ""}</Text>
+                                                </View>
+                                            )
+                                        })}
                                     </View>
                                 </View>
                                 <View style={styles.teamPositionCard}>
-                                    <Text style={styles.mediumTitle}>OUTSIDES</Text>
+                                    <Text style={styles.teamMediumTitleCentered}>OUTSIDES</Text>
                                     <View style = {styles.teamPositionRow}>
-                                        <View style={styles.teamPositionProfile}/>
+                                        {Array.from({length:game.position_slots?.outside ?? 0},(_,i)=> {
+                                            const player = game.players.filter(p=>p.position === 'outside')[i];
+                                            return (
+                                                <View key={i} style={styles.teamPositionProfileSet}>
+                                                    <View style={styles.teamPositionProfile}/>
+                                                    <Text style={styles.teamPositionName}>{player ? player.name.split(" ")[0] : ""}</Text>
+                                                </View>
+                                            )
+                                        })}
                                     </View>
                                 </View>
                                 <View style={styles.teamPositionCard}>
-                                    <Text style={styles.mediumTitle}>MIDDLES</Text>
+                                    <Text style={styles.teamMediumTitleCentered}>MIDDLES</Text>
                                     <View style = {styles.teamPositionRow}>
-                                        <View style={styles.teamPositionProfile}/>
+                                        {Array.from({length:game.position_slots?.middle ?? 0},(_,i) => {
+                                            const player = game.players.filter(p=>p.position ==='middle')[i];
+                                            return (
+                                                <View key={i} style={styles.teamPositionProfileSet}>
+                                                    <View style={styles.teamPositionProfile}/>
+                                                    <Text style={styles.teamPositionName}>{player ? player.name.split(" ")[0] : ""}</Text>
+                                                </View>
+                                            )
+                                        })}
                                     </View>
                                 </View>
                                 <View style={styles.teamPositionCard}>
-                                    <Text style={styles.mediumTitle}>OPPOSITES</Text>
+                                    <Text style={styles.teamMediumTitleCentered}>OPPOSITES</Text>
                                     <View style = {styles.teamPositionRow}>
-                                        <View style={styles.teamPositionProfile}/>
+                                        {Array.from({length:game.position_slots?.opposite ?? 0},(_,i)=>{
+                                            const player = game.players.filter(p=> p.position === 'opposite')[i];
+                                            return (
+                                                <View key={i} style={styles.teamPositionProfileSet}>
+                                                    <View style={styles.teamPositionProfile}/>
+                                                    <Text style={styles.teamPositionName}>{player ? player.name.split(" ")[0] : ""}</Text>
+                                                </View>
+                                            )
+                                        })}
                                     </View>
                                 </View>
                                 <View style={styles.teamPositionCard}>
-                                    <Text style={styles.mediumTitle}>LIBEROS</Text>
+                                    <Text style={styles.teamMediumTitleCentered}>LIBEROS</Text>
                                     <View style = {styles.teamPositionRow}>
-                                        <View style={styles.teamPositionProfile}/>
+                                        {Array.from({length:game.position_slots?.opposite ?? 0},(_,i)=>{
+                                            const player = game.players.filter(p=> p.position === 'libero')[i];
+                                            return (
+                                                <View key={i} style={styles.teamPositionProfileSet}>
+                                                    <View style={styles.teamPositionProfile}/>
+                                                    <Text style={styles.teamPositionName}>{player ? player.name.split(" ")[0] : ""}</Text>
+                                                </View>
+                                            )
+                                        })}
                                     </View>
                                 </View>
                             </Animated.View>
+                            </ScrollView>
                         </GestureDetector>
-                        </>
+                        
                     :
                         <>
                             <Text style={styles.mediumTitle}>THE HOST</Text>
@@ -378,24 +421,39 @@ export const styles = StyleSheet.create({
         padding: 20,
     },
     teamPositionProfile:{
-        width: 40,           // circle diameter
-        height: 40,          // same as width
-        borderRadius: 6,    // half of width/height
-        backgroundColor: 'white',
-        borderColor:'rgba(128,128,128,0.5)',
+        width: 50,           // circle diameter
+        height: 50,          // same as width
+        borderRadius: 9,    // half of width/height
+        backgroundColor: "#ecf1f5",
+        borderColor:"#ecf1f5",
         borderWidth:1,
-        marginHorizontal:-2,
+        marginHorizontal:6,
+        marginBottom:4
+    },
+    teamPositionProfileSet:{
+        flexDirection:'column',
+        alignItems:'center',
+        marginBottom:9,
     },
     teamPositionCard:{
         alignItems:'flex-start',
         flexDirection:"column",
         marginTop:2,
-        marginBottom:13
+        marginBottom:17,
     },
     teamPositionRow:{
         alignItems:'center',
         flexDirection:"row",
         marginTop:10,
-        marginLeft:3
+        flexWrap:'wrap'
     },
+    teamPositionName:{
+        fontSize:13
+    },
+    teamMediumTitleCentered: {
+        fontSize: 13,
+        fontWeight: "700",
+        color: "#27253F",
+        width:'100%'
+}
 })
