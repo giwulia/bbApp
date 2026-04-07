@@ -55,6 +55,7 @@ export type Player = {
     user_id: string;
     username:string;
     name: string;
+    image: string | null
     position:string;
     team_assignment: string | null
     status: string

@@ -1,6 +1,6 @@
 import { Feather, Ionicons} from "@expo/vector-icons";
 import { Search, Filter, Settings2} from 'lucide-react-native'
-import { Link } from "expo-router";
+import { useRouter, Link} from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import {
     ActivityIndicator,
@@ -33,6 +33,7 @@ export default function Games() {
         date: null,
     })
     const [date, setDate] = useState("");
+    const router = useRouter();
 
     //Loading Games
     const loadGames = async() => {
@@ -215,43 +216,41 @@ export default function Games() {
                 keyExtractor={(item) => item.id}
                 renderItem={({ item }) => (
                     <View style={styles.gameCard}>
-                        <Image source={{ uri: item.img }} style={styles.gameImage}
-                            onLoadEnd={()=> setIsLoading(false)}/>
-                        <Link
-                            href={{
-                            pathname: "/(tabs)/search/[id]",
+                        <Pressable
+                        onPress={() =>
+                            router.push({
+                            pathname: "/search/[id]",
                             params: { id: item.id },
-                            }}
-                            asChild
+                            })
+                        }
                         >
-                        <Pressable>
-                            <View style = {styles.gameInfoRow}>
-                                <Text style={styles.gameHost}>{item.organizer.name} I</Text>
-                                <Text style={[styles.gameLevel]}>{item.level_required.toUpperCase()}</Text>
-                            </View>
-                            <Text style={styles.gameTitle}>{item.title}</Text>
-                            <View style={styles.gameDetailsRow}>
-                                <View style ={styles.gameInfoRow}>
-                                    <Ionicons name="calendar-outline" size ={14} color ="gray"/>
-                                    <Text style={styles.gameInfo}>{formatGameDate(item.date)}</Text>
+                            <Image source={{ uri: item.img }} style={styles.gameImage} onLoadEnd={()=> setIsLoading(false)}/>
+                                <View style = {styles.gameInfoRow}>
+                                    <Text style={styles.gameHost}>{item.organizer.name} I</Text>
+                                    <Text style={[styles.gameLevel]}>{item.level_required.toUpperCase()}</Text>
                                 </View>
-                                <View style ={styles.gameInfoRow}>
-                                    <Ionicons name="location" size ={14} color ="gray"/>
-                                    <Text style={styles.gameInfo}>{item.location}</Text>
+                                <Text style={styles.gameTitle}>{item.title}</Text>
+                                <View style={styles.gameDetailsRow}>
+                                    <View style ={styles.gameInfoRow}>
+                                        <Ionicons name="calendar-outline" size ={14} color ="gray"/>
+                                        <Text style={styles.gameInfo}>{formatGameDate(item.date)}</Text>
+                                    </View>
+                                    <View style ={styles.gameInfoRow}>
+                                        <Ionicons name="location" size ={14} color ="gray"/>
+                                        <Text style={styles.gameInfo}>{item.location}</Text>
+                                    </View>
                                 </View>
-                            </View>
-                            <View style={styles.gameDetailsRow}>
-                                <View style ={styles.gameInfoRow}>
-                                    <Ionicons name="time" size ={14} color ="gray"/>
-                                    <Text style={styles.gameInfo}>{`${formatTime(item.start_time)}-${formatTime(item.end_time)}`}</Text>
+                                <View style={styles.gameDetailsRow}>
+                                    <View style ={styles.gameInfoRow}>
+                                        <Ionicons name="time" size ={14} color ="gray"/>
+                                        <Text style={styles.gameInfo}>{`${formatTime(item.start_time)}-${formatTime(item.end_time)}`}</Text>
+                                    </View>
+                                    <View style ={styles.gameInfoRow}>
+                                        <Ionicons name="person" size ={14} color ="gray"/>
+                                        <Text style={styles.gameInfo}>{`${item.reserved_spots}/${item.total_spots}`}</Text>
+                                    </View>
                                 </View>
-                                <View style ={styles.gameInfoRow}>
-                                    <Ionicons name="person" size ={14} color ="gray"/>
-                                    <Text style={styles.gameInfo}>{`${item.reserved_spots}/${item.total_spots}`}</Text>
-                                </View>
-                            </View>
-                        </Pressable>
-                        </Link>
+                            </Pressable>
                     </View>
                 )}
                 onRefresh ={loadGames}

@@ -17,9 +17,6 @@ import DateTimePicker from '@react-native-community/datetimepicker'
 import { Octicons } from '@expo/vector-icons'
 
 export default function createGame() {
-    const presetOptions=["None","5:1 (18)", "5:1 (12)", "6:2 (18)", "6:2 (12)"]
-
-
     const [sessionName, setSessionName] = useState("");
     const [level, setLevel] = useState<SkillLevel | null>(null);
     const [showLevelDropdown, setShowLevelDropdown]=useState(false)
@@ -35,13 +32,34 @@ export default function createGame() {
     const [description, setDescription]=useState("")
     const [step, setStep]=useState(1)
     const [preset, setPreset] = useState<string>('None')
-    const [presetOptionsList, setPresetOptionsList] = useState<string[]>(presetOptions)
     const [showPresetDropdown, setShowPresetDropdown]=useState(false)
     const [presetName, setPresetName]= useState("")
     const [showSavePresetModal,setShowSavePresetModal] =useState(false)
     const [categories, setCategories] =useState([
         {position:'', slots:0}
     ])
+
+    const steps=["Details","Date & Location", "Team Sheet"]
+    const levelOptions=['beginner','intermediate','advanced','competitive']
+    const genderOptions=['female','male','mixed']
+    const presetOptions=["None","5:1 (18)", "5:1 (12)"]
+    const [presetOptionsList, setPresetOptionsList] = useState<string[]>(presetOptions)
+
+    const presetOptionsConfig={
+        "5:1 (18)": [
+            {position:'Setter', slots:3},
+            {position:'Outside', slots:6},
+            {position:'Libero', slots:3},
+            {position:'Opposite', slots:3},
+            {position:'Middle', slots:3},
+        ],
+        "5:1 (12)":[
+            {position:'Setter', slots:2},
+            {position:'Outside', slots:4},
+            {position:'Libero', slots:2},
+            {position:'Opposite', slots:2},
+            {position:'Middle', slots:2},   
+        ]}
 
     const uploadImage = async () => {
         const result = await ImagePicker.launchImageLibraryAsync({
@@ -51,10 +69,6 @@ export default function createGame() {
             setImage(result.assets[0].uri)
         }
     }
-
-    const steps=["Details","Date & Location", "Team Sheet"]
-    const levelOptions=['beginner','intermediate','advanced','competitive']
-    const genderOptions=['female','male','mixed']
 
     const addCantegoryBox = () => {
         setCategories([...categories, {position:'',slots:0}])
@@ -276,7 +290,7 @@ export default function createGame() {
                                     )}
 
                                     {/*CUSTOM */}
-                                    {preset=='None' && (
+                                    {preset=='None' &&
                                         <>
                                         {categories.map((item,index) =>(
                                             <View  style = {styles.categoryCard} key={index}>
@@ -326,7 +340,8 @@ export default function createGame() {
                                             </View>
                                             ))}
                                         </>
-                                    )}
+                                    }
+                                    
                                 </>
                             )}
 
@@ -379,7 +394,7 @@ export const styles = StyleSheet.create({
         height: 250,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: 'gray',
+        backgroundColor: 'rgb(65, 64, 82)',
         marginBottom:15
     },
     layout: {
