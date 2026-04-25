@@ -14,6 +14,57 @@ import { useEffect, useState } from 'react';
 import { Image, Modal, Pressable, StyleSheet, Text, View, Dimensions } from 'react-native';
 import { formatGameDate, formatTime } from "../../../src/utils/format";
 
+function DefaultAvatar({name}:{name:string}) {
+    const parts = name.split(" ");
+    const initials = parts.length >1 ? parts[0][0] + parts[1][0] : parts[0][0];
+
+    return (
+        <View style = {styles.defaultAvatar}>
+            <Text style = {styles.defaultAvatarText}>{initials}</Text>
+        </View>
+    )
+}
+
+function PlayerSlot({player, onPress}:{player?: any, onPress: () => void}) {
+    return (
+        <View style= {styles.teamPositionProfileSet}>
+            <Pressable
+                onPress={onPress}
+                style={styles.teamPositionProfile}
+            >
+                {player? (
+                    player.image ? (
+                        <Image source={{uri:player.image}}/>
+                    ): (
+                        <DefaultAvatar name={player.name}/>
+                    )
+                ) : (
+                    <DefaultAvatar name='+'/>
+                    )}
+            </Pressable>
+            <Text style={styles.teamPositionName}>{player?.name?.split(" ")[0] ?? ""}</Text>
+        </View>
+    )}
+
+function TeamPositionRow({label, players, slots, onPlayerPress, onEmptyPress}:{label:string, players:any[], slots:number, onPlayerPress: (player:any) => void, onEmptyPress: () => void}) {
+
+    return (
+        <View style = {styles.teamPositionCard}>
+            <Text style = {styles.teamMediumTitleCentered}>{label}</Text>
+            <View style = {styles.teamPositionRow}>
+                {Array.from({length:slots}, (_,i) => {
+                    const player = players[i];
+                    return (
+                        <PlayerSlot
+                            key  = {player?.user_id ?? `empty-${label}-${i}`}
+                            player={player}
+                            onPress={() => player ? onPlayerPress(player) : onEmptyPress()}
+                        />
+                    )
+                })}
+            </View>
+        </View>
+    )}
 
 export default function Game() {
     const {id} = useLocalSearchParams<{id:string}>();
@@ -21,69 +72,84 @@ export default function Game() {
     const [isTeamView, setIsTeamView] = useState(false)
     const [imgReady, setImgReady]= useState(false)
     const router = useRouter();
+    const [expanded, setExpanded] = useState(false);
+    const [loading, setLoading] = useState(true);
 
 
     useEffect(() => {
         let cancelled = false;
-        (async() => {
-            setGame(null);
-            setImgReady(false);
+
+        (async () => {
+            setLoading(true);
 
             const data = await getGame(id);
-            if (!data) return;
-            if (cancelled) return;  // if this effect is no longer valid, stop immediately
+            if (!data || cancelled) return;
 
             setGame(data);
 
-            try {
-                await Image.prefetch(data.img)
-                }
-            finally {
-                if (!cancelled) setImgReady(true)
-            }
-        })()
+            await Image.prefetch(data.img).catch(() => {});
+            if (!cancelled) setImgReady(true);
+
+            setLoading(false);
+        })();
 
         return () => {
             cancelled = true;
-        }
-    }, [id]) //render again after id changes
+        };
+    }, [id]); //render again after id changes
 
-    const translateX= useSharedValue(0);
+    const translateX = useSharedValue(0);
     const screenWidth = Dimensions.get('window').width;
+
     const pan = Gesture.Pan()
+        .activeOffsetX([-15, 15])   // must move horizontally enough before activating
+        .failOffsetY([-10, 10])  // allow vertical scroll
         .onChange((e) => {
-            translateX.value = e.translationX
+            let x = Math.max(0, e.translationX);
+
+            // resistance after 60% drag
+            if (x > screenWidth * 0.6) {
+                x = screenWidth * 0.6 + (x - screenWidth * 0.6) * 0.3;
+            }
+
+            translateX.value = Math.min(x * 0.9, screenWidth);
         })
         .onEnd((e) => {
-                if (e.translationX > screenWidth / 4) {
-            // user swiped more than half the screen → go back
-            runOnJS(setIsTeamView)(false);
-            translateX.value = withSpring(screenWidth); // optional: animate to full page width
+            const shouldClose =
+                e.translationX > screenWidth * 0.25 || e.velocityX > 800;
+
+            if (shouldClose) {
+                translateX.value = withSpring(
+                    screenWidth,
+                    {
+                        damping: 18,
+                        stiffness: 220,
+                        mass: 0.8,
+                    },
+                    (finished) => {
+                        if (finished) {
+                            runOnJS(setIsTeamView)(false);
+                        }
+                    }
+                );
             } else {
-            // snap back to start
-            translateX.value = withSpring(0);
+                translateX.value = withSpring(0, {
+                    damping: 20,
+                    stiffness: 150,
+                });
             }
-        }).failOffsetY([-5,5])
+        });
 
-    const animatedStyle= useAnimatedStyle(()=> ({
-        transform:[{ translateX: translateX.value}]
-    }))
+    const animatedStyle = useAnimatedStyle(() => ({
+        transform: [{ translateX: translateX.value }],
+    }));
 
-    if (!game || !imgReady) return <Text> Loading game... </Text> // we need to define what to show on the first render *
+    if (!game) return <Text> Loading game... </Text> // we need to define what to show on the first render *
 
-    const showTeamView = () => setIsTeamView(true)
-
-    const DefaultAvatar = ({name}:{name:string}) => {
-        const parts = name.split(" ")
-        const initials = 
-            parts.length>1? parts[0][0] + parts[1][0]: parts[0][0]
-
-        return (
-            <View style = {styles.defaultAvatar}>
-                <Text style = {styles.defaultAvatarText}>{initials}</Text>
-            </View>
-        )
-    }
+    const showTeamView = () => {
+        translateX.value = 0;
+        setIsTeamView(true)
+    };
 
     {/****To be modified later for other sports****/}
     const positions = [
@@ -132,79 +198,46 @@ export default function Game() {
                     </View>
                     <View style={styles.horizontalLine}/>
                     {isTeamView? 
-                        <GestureDetector gesture={Gesture.Simultaneous(pan)}>
-                            <ScrollView style={{ flex: 1 }}>
-                            <Animated.View style={animatedStyle}>
-                                {positions.map(({key, label}) => {
-                                    const playersForPosition = game.players.filter(p => p.position === key);
-                                    const slotsForPositions = game.position_slots?.[key] ?? 0;
-                                    return (
-                                        <View key={key} style = {styles.teamPositionCard}>
-                                            <Text style={styles.teamMediumTitleCentered}>{label}</Text>
-                                            <View style = {styles.teamPositionRow}>
-                                                {Array.from({length:slotsForPositions},(_,i) => {
-                                                    const player = playersForPosition[i];
-                                                    return (
-                                                        <View key = {player?.user_id ?? `empty-${key}-${i}`} style = {styles.teamPositionProfileSet}>
-                                                                {player ? (
-                                                                    <>
-                                                                    <Pressable
-                                                                        onPress={() =>
-                                                                        router.push({
-                                                                            pathname: "./profile",
-                                                                            params: { id: player.user_id },
-                                                                        })
-                                                                        }
-                                                                        style={styles.teamPositionProfile}
-                                                                    >
-                                                                        {player.image ? (
-                                                                        <Image source={{ uri: player.image }} />
-                                                                        ) : (
-                                                                        <DefaultAvatar name={player.name} />
-                                                                        )}
-                                                                    </Pressable>
+                        <GestureDetector gesture={pan}>
+                            <Animated.View style={[{ flex: 1 }, animatedStyle]}>
+                                    {positions.map(({ key, label }) => {
+                                        const playersForPosition = game.players.filter(
+                                            (p) => p.position === key
+                                        );
+                                        const slotsForPositions = game.position_slots?.[key] ?? 0;
 
-                                                                    <Text style={styles.teamPositionName}>
-                                                                        {player.name.split(" ")[0]}
-                                                                    </Text>
-                                                                    </>
-                                                                ) : (
-                                                                    <>
-                                                                    <Pressable
-                                                                        onPress={() =>
-                                                                        router.push({
-                                                                            pathname: "./checkout",
-                                                                            params: {
-                                                                            gameId: game.id,
-                                                                            gameTitle: game.title,
-                                                                            position: key, // 🔥 dynamic now
-                                                                            price: game.price_per_spot,
-                                                                            image: game.img,
-                                                                            },
-                                                                        })
-                                                                        }
-                                                                        style={styles.teamPositionProfile}
-                                                                    >
-                                                                        <DefaultAvatar name="+" />
-                                                                    </Pressable>
-
-                                                                    <Text style={styles.teamPositionName}></Text>
-                                                                    </>
-                                                                )}
-
-                                                                </View>
-                                                            );
-                                                            })}
-                                                        </View>
-                                                        </View>
-                                                    );
-                                                    })}
+                                        return (
+                                            <TeamPositionRow
+                                                key={key}
+                                                label={label}
+                                                players={playersForPosition}
+                                                slots={slotsForPositions}
+                                                onPlayerPress={(player) =>
+                                                    router.push({
+                                                        pathname: "./profile",
+                                                        params: { id: player.user_id },
+                                                    })
+                                                }
+                                                onEmptyPress={() =>
+                                                    router.push({
+                                                        pathname: "./checkout",
+                                                        params: {
+                                                            gameId: game.id,
+                                                            position: key,
+                                                            gameTitle: game.title,
+                                                            price: game.price_per_spot,
+                                                            image: game.img,
+                                                        },
+                                                    })
+                                                }
+                                            />
+                                        );
+                                    })}
                             </Animated.View>
-                            </ScrollView>
                         </GestureDetector>
                     :
                         <>
-                            <Text style={styles.mediumTitle}>THE HOST</Text>
+                            <Text style={styles.mediumTitle}>YOUR HOST</Text>
                                 <View style={styles.mediumHostCard}>
                                     <View style={styles.hostSquareProfile}/>
                                     <View style ={styles.mediumHostText}>
@@ -212,7 +245,7 @@ export default function Game() {
                                         <Text style={[styles.gameHost, {color: "#D81159"}]}>{`${game.organizer.games_organized} GAMES HOSTED`}</Text>
                                     </View>
                                 </View>
-                            <Text style={styles.mediumTitle}>THE TEAM</Text>
+                            <Text style={styles.mediumTitle}>YOUR TEAM</Text>
                             <View style={styles.mediumTeamCard}>
                                 <Pressable style ={styles.teamCircleProfileGroup} onPress = {showTeamView}>
                                     <View style={[styles.teamCircleProfile, {marginLeft:15}]}/>
@@ -220,33 +253,44 @@ export default function Game() {
                                     <View style={styles.teamCircleProfile}/>
                                     <View style={styles.teamCircleProfile}/>
                                 </Pressable>
-                                <Text style={[styles.gameInfo,{marginEnd:10}]}>{`${game.reserved_spots}/${game.total_spots} spots `}</Text>
+                                <Text style={[styles.gameInfo,{marginEnd:10}]}>{`${game.reserved_spots}/${game.total_spots} `}</Text>
                             </View>
-                            <Text style={[styles.gameDescriptionTitle]}>DESCRIPTION</Text>
-                            <View style = {styles.gameDescriptionCard}>
-                                <Text style={styles.gameDescription}>{game.description} </Text>
+                            <Text style={[styles.sectionTitle]}>About This Game</Text>
+                            <View style = {styles.sectionCard}>
+                                <Text style={styles.sectionText} numberOfLines={ expanded? undefined:3}>
+                                    {game.description}
+                                </Text>
+                                <View style={styles.descriptionFooter}>
+                                    <Pressable onPress={() => setExpanded(!expanded)}>
+                                        <Text style={styles.expandText}>
+                                        {expanded ? "Show less" : "Read more"}
+                                        </Text>
+                                    </Pressable>
+                                </View>
+                            </View>
+                            <Text style={[styles.sectionTitle]}>Refund Policy</Text>
+                            <View style = {[styles.sectionCard, {marginBottom: 50}]}>
+                                <Text style={styles.sectionText}>
+                                    This game has a 24-hour cancellation policy, and if you cancel within that period, you’ll be eligible for a full 100% refund.
+                                </Text>
                             </View>
                         </>
                     }
                 </ParallaxScrollView>
-                <View style = {styles.joinGameCard}>
-                    <View style = {{flexDirection:'column', paddingHorizontal: 20}}>
-                        <Text style={styles.priceLabel}>SINGLE ENTRY</Text>
-                        <Text style={[styles.priceValue, {marginBottom:4}]}>{`£${game.price_per_spot}`}</Text>
+                {!isTeamView && (
+                    <View style={styles.joinGameCard}>
+                        <View style={{ flexDirection: 'column', paddingHorizontal: 20 }}>
+                            <Text style={styles.priceLabel}>SINGLE ENTRY</Text>
+                            <Text style={[styles.priceValue, { marginBottom: 4 }]}>
+                                {`£${game.price_per_spot}`}
+                            </Text>
+                        </View>
+
+                        <Pressable style={styles.joinGameButton} onPress={showTeamView}>
+                            <Text style={styles.joinGameText}>Join Game</Text>
+                        </Pressable>
                     </View>
-                    <Pressable style={styles.joinGameButton}
-                        onPress={() => router.push({
-                            pathname: "./checkout",
-                            params: {
-                                gameId: game.id,
-                                gameTitle: game.title,
-                                price: game.price_per_spot,
-                                image: game.img,
-                            }
-                        })}>
-                        <Text style={styles.joinGameText}>Join Game</Text>
-                    </Pressable>
-                </View>
+                )}
             </View>
         </GestureHandlerRootView>
     )
@@ -367,24 +411,35 @@ export const styles = StyleSheet.create({
         flexDirection:'row',
         alignItems:'center'
     },
-    gameDescriptionCard: {
-        backgroundColor: "#ecf1f5",
+    expandText:{
+        color:"#D81159",
+        fontSize:13,
+        fontWeight:"500",
+        marginRight:10,
+        marginBottom:-8,
+        marginTop:-4
+    },
+    descriptionFooter: {
+        width: "100%",
+        flexDirection: "row",
+        justifyContent: "flex-end",
+    },
+    sectionCard: {
         alignItems:'flex-start',
         flexDirection:"column",
         flex:1,
         borderRadius:10,
-        marginTop:-9,
+        marginTop:-12,
     },
-    gameDescription: {
-        fontSize: 14,
-        fontWeight: "300",
-        color: "dark-grey",
-        marginStart:12,
-        marginTop:10,
+    sectionText: {
+        fontSize: 13,
+        fontWeight: "400",
+        color: "grey",
+        marginHorizontal:1,
         marginBottom:10
     },
-    gameDescriptionTitle: {
-        fontSize:13,
+    sectionTitle: {
+        fontSize:14,
         fontWeight: "700",
         color: "#27253F",
         marginTop:10,
@@ -396,10 +451,13 @@ export const styles = StyleSheet.create({
         justifyContent:'space-between',
         borderRadius: 15,
         paddingVertical: 5,
-        marginHorizontal:15,
         backgroundColor: "#27253F" ,
         elevation: 3,
         height:48,
+        position: "absolute",
+        bottom: 0,
+        left: 10,
+        right: 10,
     },
     priceText:{
         color:"white",

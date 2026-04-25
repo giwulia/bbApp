@@ -9,12 +9,13 @@ import {
     KeyboardAvoidingView,
     Platform
 } from "react-native";
-import type { SkillLevel } from "../../src/api/types";
-import { useState } from "react"
+import type { SkillLevel, Category } from "../../src/api/types";
+import { useRef, useState } from "react"
 import * as ImagePicker from 'expo-image-picker'
 import { Picker } from '@react-native-picker/picker'
 import DateTimePicker from '@react-native-community/datetimepicker'
-import { Octicons } from '@expo/vector-icons'
+import { Octicons, Ionicons } from '@expo/vector-icons'
+import { useRouter, Link} from "expo-router";
 
 export default function createGame() {
     const [sessionName, setSessionName] = useState("");
@@ -31,21 +32,24 @@ export default function createGame() {
     const [showGenderDropdown, setShowGenderDropDown]=useState(false)
     const [description, setDescription]=useState("")
     const [step, setStep]=useState(1)
-    const [preset, setPreset] = useState<string>('None')
+    const [preset, setPreset] = useState<string>('Custom')
     const [showPresetDropdown, setShowPresetDropdown]=useState(false)
     const [presetName, setPresetName]= useState("")
     const [showSavePresetModal,setShowSavePresetModal] =useState(false)
-    const [categories, setCategories] =useState([
+    const [categories, setCategories] =useState<Category[]>([
         {position:'', slots:0}
     ])
 
+    const router = useRouter();
+
+    const descriptionRef = useRef<TextInput>(null)
     const steps=["Details","Date & Location", "Team Sheet"]
-    const levelOptions=['beginner','intermediate','advanced','competitive']
-    const genderOptions=['female','male','mixed']
-    const presetOptions=["None","5:1 (18)", "5:1 (12)"]
+    const levelOptions=['Beginner','Intermediate','Advanced','Competitive']
+    const genderOptions=['Female','Male','Mixed']
+    const presetOptions=["None","Custom","5:1 (18)", "5:1 (12)"]
     const [presetOptionsList, setPresetOptionsList] = useState<string[]>(presetOptions)
 
-    const presetOptionsConfig={
+    const presetOptionsConfig: Record<string, Category[]>={
         "5:1 (18)": [
             {position:'Setter', slots:3},
             {position:'Outside', slots:6},
@@ -70,6 +74,24 @@ export default function createGame() {
         }
     }
 
+    const removeSlot = (index:number) => {
+        const updated =[...categories]
+        updated[index] = {
+            ...updated[index],
+        slots: Math.max(0, updated[index].slots - 1)
+        }
+        setCategories(updated)
+    }
+
+    const addSlot = (index:number) => {
+        const updated =[...categories]
+        updated[index] = {
+            ...updated[index],
+            slots:updated[index].slots + 1
+        }
+        setCategories(updated)
+    }
+
     const addCantegoryBox = () => {
         setCategories([...categories, {position:'',slots:0}])
     }
@@ -84,11 +106,25 @@ export default function createGame() {
         setCategories(updated)
     }
     
-    const updatePresetOptions= (savedPreset) => {
+    const updatePresetOptions= (savedPreset:string) => {
         setPresetOptionsList([...presetOptions, savedPreset])
     }
 
     const saveAsPreset =()=>setShowSavePresetModal(true)
+
+    const canProceedFromStep3 = 
+        preset == 'None' ||
+        (categories.length> 0 &&
+        categories.every(cat => 
+            cat.position.trim() !=='' &&
+            cat.slots>0
+        ))
+    
+    const canSavePreset =
+        categories.length>1 &&
+        categories.every(cat =>
+            cat.position.trim() !== '' && cat.slots>0
+        )
 
 
     return (
@@ -97,292 +133,379 @@ export default function createGame() {
             style={{flex:1}}
             behavior={Platform.OS === 'ios'? 'padding':'height'}
         >
-                    <Pressable style={styles.coverPhotoLayout} onPress={uploadImage}>
-                        <Text style={[styles.inputFieldTitle, { color: 'white' }]}>TAP TO UPLOAD COVER PHOTO</Text>
-                            <View style={{ position: 'absolute', bottom: 10, left: 20 }}>
-                        <Text style={{ color: 'white', fontSize: 22, fontWeight: '500' }}>CREATE GAME</Text>
+            <Pressable style={styles.coverPhotoLayout} onPress={uploadImage}>
+                <Text style={[styles.inputFieldTitle, { color: 'white' }]}>TAP TO UPLOAD COVER PHOTO</Text>
+                    <View style={{ position: 'absolute', bottom: 10, left: 20 }}>
+                <Text style={{ color: 'white', fontSize: 22, fontWeight: '500' }}>CREATE GAME</Text>
+                </View>
+            </Pressable>
+            <View style={styles.layout}>
+                    <View style={styles.stepCard}>
+                        {steps.map((item,index) =>(
+                        <View key={item} style={styles.stepColumn}>
+                                <View style={[styles.horizontalLine, step === index + 1 && { backgroundColor: '#D81159'}]}/>
+                                <Text style={[styles.stepTitle, step ==index +1 && {color:'#D81159'}]}>{item}</Text>
                         </View>
-                    </Pressable>
-                    <View style={styles.layout}>
-                        {/*<Text style={styles.createGameTitle}>CREATE GAME</Text>*/}
-                            <View style={styles.stepCard}>
-                                {steps.map((item,index) =>(
-                                <View key={item} style={styles.stepColumn}>
-                                        <View style={[styles.horizontalLine, step === index + 1 && { backgroundColor: '#D81159'}]}/>
-                                        <Text style={[styles.stepTitle, step ==index +1 && {color:'#D81159'}]}>{item}</Text>
-                                </View>
-                                ))}
-                            </View>
+                        ))}
                     </View>
-                    <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: 120 }}>
-                        <View style={styles.layout}>
+            </View>
+            <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: 120 }}>
+                <View style={styles.layout}>
 
-                            {step === 1 && (
-                                <>
-                                    {/* SESSION NAME */}
-                                    <Text style={styles.inputFieldTitle}>SESSION NAME</Text>
-                                    <View style={styles.inputFieldBar}>
-                                        <TextInput
-                                            style={[styles.inputFieldText, { flex: 1 }]}
-                                            onChangeText={setSessionName}
-                                            value={sessionName}
-                                            placeholder="Enter name"
-                                            placeholderTextColor="silver"
-                                        />
-                                    </View>
-
-                                    {/* LEVEL */}
-                                    <Text style={styles.inputFieldTitle}>LEVEL</Text>
-                                    <Pressable style={styles.inputFieldBar} onPress={() => setShowLevelDropdown(!showLevelDropdown)}>
-                                        <Text style={[styles.inputFieldText,{color:"silver"}]}>{level ?? 'Select level'}</Text>
-                                    </Pressable>
-                                    {showLevelDropdown && (
-                                        <View style={styles.dropdown}>
-                                            {levelOptions.map(option => (
-                                                <Pressable
-                                                    key={option}
-                                                    style={styles.dropdownItem}
-                                                    onPress={() => {
-                                                        setLevel(option as SkillLevel)
-                                                        setShowLevelDropdown(false)
-                                                    }}
-                                                >
-                                                    <Text style={styles.dropdownText}>
-                                                        {option.charAt(0).toUpperCase() + option.slice(1)}
-                                                    </Text>
-                                                </Pressable>
-                                            ))}
-                                        </View>
-                                    )}
-
-                                    {/* GENDER */}
-                                    <Text style={styles.inputFieldTitle}>GENDER</Text>
-                                    <Pressable style={styles.inputFieldBar} onPress={() => setShowGenderDropDown(!showGenderDropdown)}>
-                                        <Text style={[styles.inputFieldText,{color:"silver"}]}>
-                                            {gender ?? 'Select Gender'}
-                                        </Text>
-                                    </Pressable>
-                                    {showGenderDropdown && (
-                                        <View style={styles.dropdown}>
-                                            {genderOptions.map(option => (
-                                                <Pressable
-                                                    key={option}
-                                                    style={styles.dropdownItem}
-                                                    onPress={() => {
-                                                        setGender(option)
-                                                        setShowGenderDropDown(false)
-                                                    }}
-                                                >
-                                                    <Text style={styles.dropdownText}>
-                                                        {option.charAt(0).toUpperCase() + option.slice(1)}
-                                                    </Text>
-                                                </Pressable>
-                                            ))}
-                                        </View>
-                                    )}
-
-                                    {/* PRICE */}
-                                    <Text style={styles.inputFieldTitle}>PRICE</Text>
-                                    <View style={styles.inputFieldBar}>
-                                        <TextInput
-                                            style={[styles.inputFieldText, { flex: 1 }]}
-                                            onChangeText={(val) => setPrice(Number(val))}
-                                            value={price?.toString() ?? ""}
-                                            placeholder="£00.00"
-                                            keyboardType="numeric"
-                                            placeholderTextColor="silver"
-                                        />
-                                    </View>
-
-                                    {/* DESCRIPTION */}
-                                    <Text style={styles.inputFieldTitle}>DESCRIPTION</Text>
-                                    <View style={styles.inputFieldBarLarge}>
-                                        <TextInput
-                                            style={[styles.inputFieldText]}
-                                            onChangeText={setDescription}
-                                            value={description}
-                                            placeholder="Add game description"
-                                            placeholderTextColor="silver"
-                                        />
-                                    </View>
-                                </>
-                            )}
-
-                            {step === 2 && (
-                                <>
-                                    {/* DATE & TIME */}
-                                    <Text style={styles.inputFieldTitle}>DATE & TIME</Text>
-                                    <View style={styles.inputFieldDual}>
-                                        <Pressable style={[styles.inputFieldBar, { flex: 1, marginRight: 12 }]} onPress={() => setShowDatePicker(!showDatePicker)}>
-                                            <Text style={[styles.inputFieldText,{color:"silver"}]}>
-                                                {date ? date.toLocaleDateString('en-GB') : 'DD/MM/YYYY'}
-                                            </Text>
-                                        </Pressable>
-                                        <Pressable style={[styles.inputFieldBar, { flex: 1 }]} onPress={() => setShowTimePicker(!showTimePicker)}>
-                                            <Text style={[styles.inputFieldText,{color:"silver"}]}>
-                                                {time ? time.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : 'HH:MM'}
-                                            </Text>
-                                        </Pressable>
-                                    </View>
-                                    {showDatePicker && (
-                                        <DateTimePicker
-                                            value={date ?? new Date()}
-                                            mode="date"
-                                            onChange={(event, selectedDate) => {
-                                                setShowDatePicker(false)
-                                                if (selectedDate) setDate(selectedDate)
-                                            }}
-                                        />
-                                    )}
-                                    {showTimePicker && (
-                                        <DateTimePicker
-                                            value={time ?? new Date()}
-                                            mode="time"
-                                            display="spinner"
-                                            onChange={(event, selectedTime) => {
-                                                setShowTimePicker(false)
-                                                if (selectedTime) setTime(selectedTime)
-                                            }}
-                                        />
-                                    )}
-                                    <Pressable style={styles.recurringEventButton}>
-                                        <Text style={[styles.inputFieldText, {color:'white'}]}>SET RECURRING EVENT</Text>
-                                    </Pressable>
-
-                                    {/* LOCATION */}
-                                    <Text style={styles.inputFieldTitle}>LOCATION</Text>
-                                    <View style={styles.inputFieldBar}>
-                                        <TextInput
-                                            style={[styles.inputFieldText, { flex: 1 }]}
-                                            onChangeText={setLocation}
-                                            value={location}
-                                            placeholder="Enter address"
-                                            placeholderTextColor="silver"
-                                        />
-                                    </View>
-                                </>
-                            )}
-
-                            {step === 3 && (
-                                <>
-                                    {/*PRESET */}
-                                    <Text style= {styles.inputFieldTitle}>PRESET</Text>
-                                    <Pressable style = {styles.inputFieldBar} onPress={()=> setShowPresetDropdown(!showPresetDropdown)}>
-                                        <Text style ={styles.inputFieldText}>{preset}</Text>
-                                    </Pressable>
-                                    {showPresetDropdown && (
-                                        <View style={styles.dropdown}>
-                                            {presetOptionsList.map(option => (
-                                                <Pressable
-                                                    key={option}
-                                                    style={styles.dropdownItem}
-                                                    onPress={() => {
-                                                        setPreset(option)
-                                                        setShowPresetDropdown(false)
-                                                    }}
-                                                >
-                                                    <Text style={styles.dropdownText}>
-                                                        {option.charAt(0).toUpperCase() + option.slice(1)}
-                                                    </Text>
-                                                </Pressable>
-                                            ))}
-                                        </View>
-                                    )}
-
-                                    {/*CUSTOM */}
-                                    {preset=='None' &&
-                                        <>
-                                        {categories.map((item,index) =>(
-                                            <View  style = {styles.categoryCard} key={index}>
-                                                <View style={styles.categoryFirstRow}>
-                                                    <Text style={styles.inputFieldTitle}>{`CATEGORY ${index +1}`}</Text>
-                                                    {categories.length >1 && (
-                                                        <Pressable onPress={()=> deleteCategory(index)}>
-                                                            <Octicons name="x" size={16} color="dimgray" />
-                                                        </Pressable>
-                                                    )}
-                                                </View>
-                                                <View style={styles.inputFieldBar}>
-                                                    <TextInput
-                                                        style={[styles.inputFieldText, { flex: 1 }]}
-                                                        onChangeText={(val) => updateCategory(index,'position',val)}
-                                                        value={item.position ?? ""}
-                                                        placeholder="Example: Setter/Outside/Opposite"
-                                                        blurOnSubmit={false}
-                                                        placeholderTextColor="silver"
-                                                    />
-                                                </View>
-                                                <View style={styles.inputFieldBar}>
-                                                    <TextInput
-                                                        style={[styles.inputFieldText, { flex: 1 }]}
-                                                        keyboardType="numeric"
-                                                        onChangeText={(val)=> {
-                                                            const num = parseInt(val)
-                                                            updateCategory(index,'slots', isNaN(num)? 0:num)}}
-                                                        value={item.slots > 0 ? item.slots.toString() : ""}
-                                                        placeholder="Number of Slots"
-                                                        placeholderTextColor="silver"
-                                                    />
-                                                </View>
-                                                {index === categories.length - 1 && (
-                                                    <>
-                                                        <Pressable style={styles.addCategoryButton} onPress={addCantegoryBox}>
-                                                            <Text style={styles.nextStepText}>ADD CATEGORY</Text>
-                                                        </Pressable>
-                                                        {categories.length > 1 && categories.every(cat => cat.position.trim() !== '' && cat.slots>0)
-                                                        && (
-                                                            <Pressable style={styles.savePresetButton} onPress={saveAsPreset}>
-                                                                <Text style={styles.savePresetText}>Save settings as preset →</Text>
-                                                            </Pressable>
-                                                        )}
-                                                    </>
-                                                )}
-                                            </View>
-                                            ))}
-                                        </>
-                                    }
-                                    
-                                </>
-                            )}
-
-                        </View>
-                    </ScrollView>
-                    <Modal 
-                        visible={showSavePresetModal}
-                        transparent
-                        animationType="fade">
-                            <View style={styles.savePresetBackdrop}>
-                                <View style = {styles.savePresetModal}>
-                                    <Text style = {[styles.inputFieldTitle, {marginBottom:20}]}>NAME YOUR PRESET</Text>
-                                    <View style={styles.inputFieldBar}>
-                                        <TextInput
-                                        style={[styles.inputFieldText, {flex:1}]}
-                                        onChangeText={setPresetName}
-                                        value={presetName}
-                                        placeholder="Example: My 5:1 Setup"
-                                        placeholderTextColor="silver"
-                                    />
-                                    </View>
-                                    <View style={styles.savePresetModalRow}>
-                                        <Pressable onPress ={()=>setShowSavePresetModal(false)}>
-                                            <Text>CANCEL</Text>
-                                        </Pressable>
-                                        <Pressable onPress={() => {
-                                            if (presetName.trim()) {
-                                                updatePresetOptions(presetName.trim())
-                                                setPresetName("")
-                                                setShowSavePresetModal(false)
-                                            }
-                                        }}>
-                                            <Text style={styles.savePresetModalButton}>Save</Text>
-                                        </Pressable>
-                                    </View>
-                                </View>
+                    {step === 1 && (
+                        <>
+                            {/* SESSION NAME */}
+                            <Text style={styles.inputFieldTitle}>SESSION NAME</Text>
+                            <View style={styles.inputFieldBar}>
+                                <TextInput
+                                    style={[styles.inputFieldText, { flex: 1 }]}
+                                    onChangeText={setSessionName}
+                                    value={sessionName}
+                                    placeholder="Enter name"
+                                    placeholderTextColor="silver"
+                                />
                             </View>
-                    </Modal>
+
+                            {/* LEVEL */}
+                            <Text style={styles.inputFieldTitle}>LEVEL</Text>
+                            <Pressable style={styles.inputFieldBar} onPress={() => setShowLevelDropdown(!showLevelDropdown)}>
+                                <Text style={[styles.inputFieldText,{ color: level ? "#27253F" : "silver" }]}>{level ?? 'Select level'}</Text>
+                            </Pressable>
+                            {showLevelDropdown && (
+                                <View style={styles.dropdown}>
+                                    {levelOptions.map(option => (
+                                        <Pressable
+                                            key={option}
+                                            style={styles.dropdownItem}
+                                            onPress={() => {
+                                                setLevel(option as SkillLevel)
+                                                setShowLevelDropdown(false)
+                                            }}
+                                        >
+                                            <Text style={styles.dropdownText}>
+                                                {option}
+                                            </Text>
+                                        </Pressable>
+                                    ))}
+                                </View>
+                            )}
+
+                            {/* GENDER */}
+                            <Text style={styles.inputFieldTitle}>GENDER</Text>
+                            <Pressable style={styles.inputFieldBar} onPress={() => setShowGenderDropDown(!showGenderDropdown)}>
+                                <Text style={[styles.inputFieldText,{ color: gender ? "#27253F" : "silver" }]}>
+                                    {gender ?? 'Select Gender'}
+                                </Text>
+                            </Pressable>
+                            {showGenderDropdown && (
+                                <View style={styles.dropdown}>
+                                    {genderOptions.map(option => (
+                                        <Pressable
+                                            key={option}
+                                            style={styles.dropdownItem}
+                                            onPress={() => {
+                                                setGender(option)
+                                                setShowGenderDropDown(false)
+                                            }}
+                                        >
+                                            <Text style={styles.dropdownText}>
+                                                {option}
+                                            </Text>
+                                        </Pressable>
+                                    ))}
+                                </View>
+                            )}
+
+                            {/* PRICE */}
+                            <Text style={styles.inputFieldTitle}>PRICE</Text>
+                            <View style={styles.inputFieldBar}>
+                                <TextInput
+                                    style={[styles.inputFieldText, { flex: 1 }]}
+                                    onChangeText={(val) => setPrice(Number(val))}
+                                    value={price?.toString() ?? ""}
+                                    placeholder="£00.00"
+                                    keyboardType="numeric"
+                                    placeholderTextColor="silver"
+                                />
+                            </View>
+
+                            {/* DESCRIPTION */}
+                            <Text style={styles.inputFieldTitle}>DESCRIPTION</Text>
+                            <Pressable
+                                style={styles.inputFieldBarLarge}
+                                onPress={() => descriptionRef.current?.focus()}
+                            >
+                                <TextInput
+                                    ref={descriptionRef}
+                                    style={styles.inputFieldText}
+                                    onChangeText={setDescription}
+                                    value={description}
+                                    placeholder="Add game description"
+                                    placeholderTextColor="silver"
+                                    multiline
+                                    textAlignVertical="top"
+                                />
+                            </Pressable>
+                        </>
+                    )}
+
+                    {step === 2 && (
+                        <>
+                            {/* DATE & TIME */}
+                            <Text style={styles.inputFieldTitle}>DATE & TIME</Text>
+                            <View style={styles.inputFieldDual}>
+                                <Pressable style={[styles.inputFieldBar, { flex: 1, marginRight: 12 }]} onPress={() => setShowDatePicker(!showDatePicker)}>
+                                    <Text style={[styles.inputFieldText,{color: date ? "#27253F" :"silver"}]}>
+                                        {date ? date.toLocaleDateString('en-GB') : 'DD/MM/YYYY'}
+                                    </Text>
+                                </Pressable>
+                                <Pressable style={[styles.inputFieldBar, { flex: 1 }]} onPress={() => setShowTimePicker(!showTimePicker)}>
+                                    <Text style={[styles.inputFieldText,{color: time ? "#27253F" :"silver"}]}>
+                                        {time ? time.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : 'HH:MM'}
+                                    </Text>
+                                </Pressable>
+                            </View>
+                            {showDatePicker && (
+                                <DateTimePicker
+                                    value={date ?? new Date()}
+                                    mode="date"
+                                    onChange={(event, selectedDate) => {
+                                        setShowDatePicker(false)
+                                        if (selectedDate) setDate(selectedDate)
+                                    }}
+                                />
+                            )}
+                            {showTimePicker && (
+                                <DateTimePicker
+                                    value={time ?? new Date()}
+                                    mode="time"
+                                    display="spinner"
+                                    onChange={(event, selectedTime) => {
+                                        setShowTimePicker(false)
+                                        if (selectedTime) setTime(selectedTime)
+                                    }}
+                                />
+                            )}
+                            <Pressable style={styles.recurringEventButton}>
+                                <Text style={[styles.inputFieldText, {color:'white'}]}>SET RECURRING EVENT</Text>
+                            </Pressable>
+
+                            {/* LOCATION */}
+                            <Text style={styles.inputFieldTitle}>LOCATION</Text>
+                            <View style={styles.inputFieldBar}>
+                                <TextInput
+                                    style={[styles.inputFieldText, { flex: 1 }]}
+                                    onChangeText={setLocation}
+                                    value={location}
+                                    placeholder="Enter address"
+                                    placeholderTextColor="silver"
+                                />
+                            </View>
+                        </>
+                    )}
+
+                    {step === 3 && (
+                        <>
+                            {/*PRESET */}
+                            <Text style= {styles.inputFieldTitle}>PRESET</Text>
+                            <Pressable style = {styles.inputFieldBar} onPress={()=> setShowPresetDropdown(!showPresetDropdown)}>
+                                <Text style ={styles.inputFieldText}>{preset}</Text>
+                            </Pressable>
+                            {showPresetDropdown && (
+                                <View style={styles.dropdown}>
+                                    {presetOptionsList.map(option => (
+                                        <Pressable
+                                            key={option}
+                                            style={styles.dropdownItem}
+                                            onPress={() => {
+                                                setPreset(option)
+                                                setShowPresetDropdown(false)
+                                                if (option == 'None'){
+                                                    setCategories([])
+                                                } else if (option == 'Custom') {
+                                                    setCategories([{position:'', slots:0}])
+                                                } else {
+                                                    const presetData = presetOptionsConfig[option]
+                                                    const copiedData = presetData.map(item => ({
+                                                        position:item.position,
+                                                        slots:item.slots
+                                                    }))
+                                                    setCategories(copiedData)
+                                                }
+                                            }}
+                                        >
+                                            <Text style={styles.dropdownText}>
+                                                {option.charAt(0).toUpperCase() + option.slice(1)}
+                                            </Text>
+                                        </Pressable>
+                                    ))}
+                                </View>
+                            )}
+
+                            {/*CUSTOM*/}
+                            {preset=='Custom' &&
+                                <>
+                                {categories.map((item,index) =>(
+                                    <View  style = {styles.categoryCard} key={index}>
+                                        <View style={styles.categoryFirstRow}>
+                                            <Text style={styles.inputFieldTitle}>{`CATEGORY ${index +1}`}</Text>
+                                            {categories.length >1 && (
+                                                <Pressable onPress={()=> deleteCategory(index)}>
+                                                    <Octicons name="x" size={16} color="dimgray" />
+                                                </Pressable>
+                                            )}
+                                        </View>
+                                        <View style={styles.inputFieldBar}>
+                                            <TextInput
+                                                style={[styles.inputFieldText, { flex: 1 }]}
+                                                onChangeText={(val) => updateCategory(index,'position',val)}
+                                                value={item.position ?? ""}
+                                                placeholder="Example: Setter/Outside/Opposite"
+                                                blurOnSubmit={false}
+                                                placeholderTextColor="silver"
+                                            />
+                                        </View>
+                                        <View style={styles.inputFieldBar}>
+                                            <TextInput
+                                                style={[styles.inputFieldText, { flex: 1 }]}
+                                                keyboardType="numeric"
+                                                onChangeText={(val)=> {
+                                                    const num = parseInt(val)
+                                                    updateCategory(index,'slots', isNaN(num)? 0:num)}}
+                                                value={item.slots > 0 ? item.slots.toString() : ""}
+                                                placeholder="Number of Slots"
+                                                placeholderTextColor="silver"
+                                            />
+                                        </View>
+                                        {index === categories.length - 1 && (
+                                            <>
+                                                <Pressable style={styles.addCategoryButton} onPress={addCantegoryBox}>
+                                                    <Text style={styles.nextStepText}>ADD CATEGORY</Text>
+                                                </Pressable>
+                                                {canSavePreset && (
+                                                    <Pressable style={styles.savePresetButton} onPress={saveAsPreset}>
+                                                        <Text style={styles.savePresetText}>Save settings as preset →</Text>
+                                                    </Pressable>
+                                                )}
+                                            </>
+                                        )}
+                                    </View>
+                                    ))}
+                                </>
+                            }
+
+                            {/* PRESET CONFIG */}
+                            {preset !== 'Custom' && preset != 'None'&& 
+                            <>
+                            <View style = {styles.presetConfigBox}>
+                                {categories.map((item, index) => (
+                                    <View key={index} style={styles.presetConfigRow}>
+                                        {/* LEFT SIDE */}
+                                        <View style={styles.leftSide}>
+                                            <Text style={styles.presetPosition}>{item.position}</Text>
+                                        </View>
+
+                                        {/* RIGHT SIDE (icon + box grouped) */}
+                                        <View style={styles.rightSide}>
+                                            <Ionicons name="person" size={16} color="gray" />
+
+                                            <View style={styles.presetNumberBox}>
+                                                <Pressable
+                                                    style={styles.stepButton}
+                                                    onPress={() => removeSlot(index)}
+                                                    disabled={item.slots === 0}
+                                                >
+                                                    <Text style={{ opacity: item.slots === 0 ? 0.3 : 1 }}>-</Text>
+                                                </Pressable>
+
+                                                <Text style={styles.slotText}>{item.slots}</Text>
+
+                                                <Pressable style={styles.stepButton} onPress={() => addSlot(index)}>
+                                                    <Text>+</Text>
+                                                </Pressable>
+                                            </View>
+                                        </View>
+                                    </View>
+                                ) )}
+                            </View>
+                            </>
+                            }
+
+                            {/*NONE*/}
+                            {preset == 'None' &&
+                            <>
+                                <Text style={{ color: 'gray', marginTop: 10 }}>
+                                    No positions defined for this game
+                                </Text>
+                            </>
+                            }
+                        </>
+                    )}
+
+                </View>
+            </ScrollView>
+            <Modal 
+                visible={showSavePresetModal}
+                transparent
+                animationType="fade">
+                    <View style={styles.savePresetBackdrop}>
+                        <View style = {styles.savePresetModal}>
+                            <Text style = {[styles.inputFieldTitle, {marginBottom:20}]}>NAME YOUR PRESET</Text>
+                            <View style={styles.inputFieldBar}>
+                                <TextInput
+                                style={[styles.inputFieldText, {flex:1}]}
+                                onChangeText={setPresetName}
+                                value={presetName}
+                                placeholder="Example: My 5:1 Setup"
+                                placeholderTextColor="silver"
+                            />
+                            </View>
+                            <View style={styles.savePresetModalRow}>
+                                <Pressable onPress ={()=>setShowSavePresetModal(false)}>
+                                    <Text>CANCEL</Text>
+                                </Pressable>
+                                <Pressable onPress={() => {
+                                    if (presetName.trim()) {
+                                        updatePresetOptions(presetName.trim())
+                                        setPresetName("")
+                                        setShowSavePresetModal(false)
+                                    }
+                                }}>
+                                    <Text style={styles.savePresetModalButton}>Save</Text>
+                                </Pressable>
+                            </View>
+                        </View>
+                    </View>
+            </Modal>
         </KeyboardAvoidingView>
-        <Pressable style = {styles.nextStepButton} onPress={() => step ==3? setStep(1):setStep(step + 1)}>
-            <Text style={styles.nextStepText}>Next</Text>
+        <Pressable 
+            style={[
+                styles.nextStepButton,
+                step === 3 && !canProceedFromStep3 && { opacity: 0.4 }
+            ]} 
+            onPress={() => {
+            if (step == 3) {
+                if (!canProceedFromStep3) return
+                    router.push({
+                        pathname: "/reviewGame",
+                        params: {
+                            sessionName,
+                            level,
+                            location,
+                            price,
+                            image,
+                            gender,
+                            description,
+                            date: date?.toISOString(),
+                            time: time?.toISOString(),
+                            categories: JSON.stringify(categories)
+                        }
+                    })
+            } else {
+                setStep(step+1)
+            }}}
+        >
+            <Text style={styles.nextStepText}>{step !== 3 ? 'Next' : 'Review Game'}</Text>
         </Pressable>
         </View>
    )
@@ -394,7 +517,7 @@ export const styles = StyleSheet.create({
         height: 250,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: 'rgb(65, 64, 82)',
+        backgroundColor: 'rgb(117, 117, 118)',
         marginBottom:15
     },
     layout: {
@@ -411,7 +534,8 @@ export const styles = StyleSheet.create({
         flexDirection:'row',
         justifyContent:'space-evenly'
     },
-    stepColumn:{
+    stepColumn:
+    {
         flex:1,
         flexDirection:'column',
         marginBottom:35
@@ -447,7 +571,7 @@ export const styles = StyleSheet.create({
         flexDirection: "row",
         alignItems: "center",
         marginBottom: 18,
-        height: 40,
+        height: 44,
         borderColor: "silver",
         borderRadius: 8,
         borderWidth: 1,
@@ -476,7 +600,7 @@ export const styles = StyleSheet.create({
         elevation: 2,
         height: 33,
         width: '100%',
-        marginBottom: 18,
+        marginBottom: 23,
     },
     dropdown: {
         borderColor: 'silver',
@@ -505,7 +629,7 @@ export const styles = StyleSheet.create({
         marginHorizontal:15,
         backgroundColor: "#D81159",
         elevation: 3,
-        height:33
+        height:38
     },
     nextStepText:{
         color:'white',
@@ -562,6 +686,55 @@ export const styles = StyleSheet.create({
     },
     savePresetModalButton:{ 
         color: '#D81159',
-        fontWeight: '600' }
+        fontWeight: '600' 
+    },
+    presetConfigBox:{
+        marginTop:20,
+        marginHorizontal:4
+    },
+    presetConfigRow:{
+        flexDirection:'row',
+        marginBottom:20,
+        alignItems:'center'
+    },
+    leftSide: {
+        flex: 2,
+    },
+    rightSide: {
+        flex: 1,
+        flexDirection: 'row',
+        justifyContent: 'flex-end',
+        alignItems: 'center',
+        gap: 8,
+    },
+    presetNumberBox:{
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        height: 30,
+        borderColor:'#ddd',
+        width:100,
+        borderRadius: 8,
+        borderWidth: 1,
+        paddingHorizontal: 4,
+        backgroundColor: '#f7f7f7',
+    },
+    presetPosition:{
+        fontSize:16,
+        fontWeight:500,
+        color:'black'
+    },
+    stepButton: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    slotText: {
+        flex: 1,
+        textAlign: 'center',
+        fontSize: 14,
+        fontWeight: '500',
+        color: '#27253F',
+    },
 }
 )

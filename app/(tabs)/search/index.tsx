@@ -217,11 +217,11 @@ export default function Games() {
                 renderItem={({ item }) => (
                     <View style={styles.gameCard}>
                         <Pressable
-                        onPress={() =>
-                            router.push({
-                            pathname: "/search/[id]",
-                            params: { id: item.id },
-                            })
+                            onPress={() =>
+                                router.push({
+                                    pathname: "/search/[id]",
+                                    params: { id: item.id },
+                                })
                         }
                         >
                             <Image source={{ uri: item.img }} style={styles.gameImage} onLoadEnd={()=> setIsLoading(false)}/>
