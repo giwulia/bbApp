@@ -18,6 +18,7 @@ import { Octicons, Ionicons } from '@expo/vector-icons'
 import { useRouter, Link, useLocalSearchParams} from "expo-router";
 
 export default function reviewGame() {
+    const router = useRouter()
 
     type Params = {
         sessionName: string
@@ -28,8 +29,10 @@ export default function reviewGame() {
         image: string
         date: string
         time: string
+        endTime:string
         location: string
-        categories: string
+        categories: string,
+        preset: string
     }
 
     const params = useLocalSearchParams<Params>()
@@ -42,66 +45,130 @@ export default function reviewGame() {
         description: params.description,
     }
 
-    const detailsLabels = {
-        sessionName: "NAME",
-        level: "LEVEL",
-        price: "PRICE (£)",
-        gender: "GENDER",
-        description: "DESCRIPTION"
-    }
-
     const timeLocation = {
         date: params.date ? new Date(params.date) : null,
         time: params.time ? new Date(params.time) : null,
+        endTime:params.endTime? new Date(params.endTime): null,      
         location: params.location
     }
 
-    const timeLocationLabels = {
-        date: "DATE",
-        time: "TIME",
-        location: "LOCATION"
+    const timeRange =
+    timeLocation.time && timeLocation.endTime
+        ? `${timeLocation.time.toLocaleTimeString("en-GB", {
+              hour: "2-digit",
+              minute: "2-digit",
+          })} - ${timeLocation.endTime.toLocaleTimeString("en-GB", {
+              hour: "2-digit",
+              minute: "2-digit",
+          })}`
+        : "-";
+
+    const timeSheet ={
+        preset: params.preset,
+        categories: params.categories
+        ? (JSON.parse(params.categories) as Category[])
+        : []
     }
 
-    const categories = params.categories ? JSON.parse(params.categories) :[]
+    const detailsRows = [
+        { 
+            label: "NAME",
+            value: details.sessionName 
+        },
+        { 
+            label: "LEVEL",
+            value: details.level 
+        },
+        { 
+            label: "PRICE (£)",
+            value: details.price 
+        },
+        { 
+            label: "GENDER",
+            value: details.gender
+        },
+        { 
+            label: "DESCRIPTION",
+            value: details.description
+        },
+    ]
 
+    const timeLocationRows = [
+        {
+            label: "DATE",
+            value: timeLocation.date
+            ? timeLocation.date.toLocaleDateString("en-GB")
+            : "-",
+        },
+        {
+            label: "TIME",
+            value: timeRange,
+        },
+        {
+            label: "LOCATION",
+            value: timeLocation.location ?? "-",
+        },
+    ]
+
+    const teamSheetRows = [
+        {
+            label: "PRESET",
+            value: timeSheet.preset ?? "-",
+        },
+        {
+            label: "POSITIONS",
+            value: timeSheet.categories.length
+            ? timeSheet.categories
+                .map((cat) => `${cat.position} x${cat.slots}`)
+                .join(", ")
+            : "-",
+        },
+    ]
+
+    function InfoRow({label,value} : {label:string; value:string|number}) {
+        return(
+            <View style={styles.infoRow}>
+                <View style={styles.leftSide}>
+                    <Text style={styles.text}>{label}</Text>
+                </View>
+                <View style={styles.rightSide}>
+                    <Text style={[styles.text, {color:"black"}]}>{value}</Text>
+                </View>
+            </View>
+        )
+    }
+
+    
     return (
         <View style={[{backgroundColor:'white'},{ flex: 1 }]}>
             <Image source={{uri: params.image}} style = {styles.coverPhotoLayout}/>
             <View style={styles.layout}>
-                <Pressable style={{marginVertical:20}}>
+                <Pressable style={styles.buttonContent} onPress={()=> router.back()}>
+                    <Ionicons name="arrow-back" size={16} color="#D81159" />
                     <Text style={styles.backButton}>BACK</Text>
                 </Pressable>
                 <View style={styles.box}>
                     <Text style={styles.title}>Details</Text>
-                        {Object.entries(details).map(([key, value]) => (
-                            <View key={key} style={styles.infoRow}>
-                                <View style={styles.leftSide}>
-                                    <Text style={styles.text}>{detailsLabels[key]?? key}</Text>
-                                </View>
-                                <View style={styles.rightSide}>
-                                    <Text style={[styles.text, {color:'black'}]}>{String(value)}</Text>
-                                </View>
-                            </View>
-                        ))}
+                    {detailsRows.map((row) => (
+                        <InfoRow key={row.label} label={row.label} value={String(row.value)} />
+                    ))}
                 </View>
                 <View style={styles.box}>
                     <Text style={styles.title}>Date & Location</Text>
-                        {Object.entries(timeLocation).map(([key, value]) => (
-                            <View key={key} style={styles.infoRow}>
-                                <View style={styles.leftSide}>
-                                    <Text style={styles.text}>{timeLocationLabels[key]?? key}</Text>
-                                </View>
-                                <View style={styles.rightSide}>
-                                    <Text style={[styles.text, {color:'black'}]}>{value instanceof Date
-                                    ? value.toLocaleDateString()
-                                    : value ?? "-"}</Text>
-                                </View>
-                            </View>
+                        {timeLocationRows.map((row) => (
+                            <InfoRow key={row.label} label={row.label} value={row.value} />
                         ))}
                 </View>
+                <View style={styles.box}>
+                <Text style={styles.title}>Team Sheet</Text>
+                {teamSheetRows.map((row)=> (
+                    <InfoRow key={row.label} label ={row.label} value={row.value}/>
+                ))}
+            </View>
             </View>
         </View>
     )
+
 }
 
 export const styles = StyleSheet.create({
@@ -134,7 +201,7 @@ export const styles = StyleSheet.create({
     },
     text:{
         fontSize:13,
-        fontWeight:'400',
+        fontWeight:'500',
         color:'gray',
         marginBottom:8
     },
@@ -150,7 +217,13 @@ export const styles = StyleSheet.create({
     },
     backButton:{
         color:'#D81159',
-        fontWeight:'500',
+        fontWeight:'600',
         fontSize:14
-    }
+    },
+    buttonContent: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4, // small spacing between icon + text
+        marginVertical:20
+    },
 })

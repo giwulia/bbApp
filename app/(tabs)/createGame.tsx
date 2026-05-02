@@ -27,7 +27,9 @@ export default function createGame() {
     const [date, setDate] = useState<Date | null>(null)
     const [showDatePicker, setShowDatePicker] = useState(false)
     const [time, setTime] = useState<Date | null>(null)
+    const [endTime, setEndTime] = useState<Date | null>(null)
     const [showTimePicker, setShowTimePicker] = useState(false)
+    const [showEndTimePicker, setShowEndTimePicker] = useState(false)
     const [gender, setGender] =useState<string|null>(null)
     const [showGenderDropdown, setShowGenderDropDown]=useState(false)
     const [description, setDescription]=useState("")
@@ -107,7 +109,7 @@ export default function createGame() {
     }
     
     const updatePresetOptions= (savedPreset:string) => {
-        setPresetOptionsList([...presetOptions, savedPreset])
+        setPresetOptionsList(prev => [...prev, savedPreset])    
     }
 
     const saveAsPreset =()=>setShowSavePresetModal(true)
@@ -119,7 +121,7 @@ export default function createGame() {
             cat.position.trim() !=='' &&
             cat.slots>0
         ))
-    
+        
     const canSavePreset =
         categories.length>1 &&
         categories.every(cat =>
@@ -144,7 +146,7 @@ export default function createGame() {
                         {steps.map((item,index) =>(
                         <View key={item} style={styles.stepColumn}>
                                 <View style={[styles.horizontalLine, step === index + 1 && { backgroundColor: '#D81159'}]}/>
-                                <Text style={[styles.stepTitle, step ==index +1 && {color:'#D81159'}]}>{item}</Text>
+                                <Text style={[styles.stepTitle, step ==index +1 && {color:'#D81159',fontWeight:'600'}]}>{item}</Text>
                         </View>
                         ))}
                     </View>
@@ -251,17 +253,23 @@ export default function createGame() {
 
                     {step === 2 && (
                         <>
-                            {/* DATE & TIME */}
-                            <Text style={styles.inputFieldTitle}>DATE & TIME</Text>
+                            <Text style={styles.inputFieldTitle}>DATE</Text>
+                            <Pressable style={[styles.inputFieldBar, { flex: 1, marginRight: 12 }]} onPress={() => setShowDatePicker(!showDatePicker)}>
+                                <Text style={[styles.inputFieldText,{color: date ? "#27253F" :"silver"}]}>
+                                    {date ? date.toLocaleDateString('en-GB') : 'DD/MM/YYYY'}
+                                </Text>
+                            </Pressable>
+                            {/* TIME */}
+                            <Text style={styles.inputFieldTitle}>START & END TIME</Text>
                             <View style={styles.inputFieldDual}>
-                                <Pressable style={[styles.inputFieldBar, { flex: 1, marginRight: 12 }]} onPress={() => setShowDatePicker(!showDatePicker)}>
-                                    <Text style={[styles.inputFieldText,{color: date ? "#27253F" :"silver"}]}>
-                                        {date ? date.toLocaleDateString('en-GB') : 'DD/MM/YYYY'}
-                                    </Text>
-                                </Pressable>
                                 <Pressable style={[styles.inputFieldBar, { flex: 1 }]} onPress={() => setShowTimePicker(!showTimePicker)}>
                                     <Text style={[styles.inputFieldText,{color: time ? "#27253F" :"silver"}]}>
                                         {time ? time.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : 'HH:MM'}
+                                    </Text>
+                                </Pressable>
+                                <Pressable style={[styles.inputFieldBar, {flex:1}]} onPress={() => setShowEndTimePicker(!showEndTimePicker)}>
+                                    <Text style={[styles.inputFieldText,{color: endTime? "#27253F" :"silver"}]}>
+                                        {endTime ? endTime.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : 'HH:MM'}
                                     </Text>
                                 </Pressable>
                             </View>
@@ -286,6 +294,17 @@ export default function createGame() {
                                     }}
                                 />
                             )}
+                            {showEndTimePicker && (
+                            <DateTimePicker
+                                value={endTime ?? new Date()}
+                                mode="time"
+                                display="spinner"
+                                onChange={(event, selectedTime) => {
+                                    setShowEndTimePicker(false)
+                                    if (selectedTime) setEndTime(selectedTime)
+                                }}
+                            />
+                        )}
                             <Pressable style={styles.recurringEventButton}>
                                 <Text style={[styles.inputFieldText, {color:'white'}]}>SET RECURRING EVENT</Text>
                             </Pressable>
@@ -380,7 +399,7 @@ export default function createGame() {
                                         {index === categories.length - 1 && (
                                             <>
                                                 <Pressable style={styles.addCategoryButton} onPress={addCantegoryBox}>
-                                                    <Text style={styles.nextStepText}>ADD CATEGORY</Text>
+                                                    <Text style={styles.buttonText}>ADD CATEGORY</Text>
                                                 </Pressable>
                                                 {canSavePreset && (
                                                     <Pressable style={styles.savePresetButton} onPress={saveAsPreset}>
@@ -478,35 +497,54 @@ export default function createGame() {
                     </View>
             </Modal>
         </KeyboardAvoidingView>
-        <Pressable 
-            style={[
-                styles.nextStepButton,
-                step === 3 && !canProceedFromStep3 && { opacity: 0.4 }
-            ]} 
-            onPress={() => {
-            if (step == 3) {
-                if (!canProceedFromStep3) return
-                    router.push({
-                        pathname: "/reviewGame",
-                        params: {
-                            sessionName,
-                            level,
-                            location,
-                            price,
-                            image,
-                            gender,
-                            description,
-                            date: date?.toISOString(),
-                            time: time?.toISOString(),
-                            categories: JSON.stringify(categories)
-                        }
-                    })
-            } else {
-                setStep(step+1)
-            }}}
-        >
-            <Text style={styles.nextStepText}>{step !== 3 ? 'Next' : 'Review Game'}</Text>
-        </Pressable>
+        <View style={styles.horizontalButton}>
+            <Pressable disabled={step === 1} style ={[styles.goBackButton, step === 1 && {opacity: 0.4}]} onPress = {()=> {
+                if (step !=1) {
+                    setStep(step-1)
+                }
+            }}>
+                <View style={styles.buttonContent}>
+                    <Ionicons name="arrow-back" size={16} color="white" />
+                    <Text style={styles.buttonText}>Back</Text>
+                </View>
+            </Pressable>
+            <Pressable 
+                    style={[
+                        styles.nextStepButton,
+                        step === 3 && !canProceedFromStep3 && { opacity: 0.4 }
+                    ]} 
+                    onPress={() => {
+                    if (step == 3) {
+                        if (!canProceedFromStep3) return
+                            router.push({
+                                pathname: "/reviewGame",
+                                params: {
+                                    sessionName,
+                                    level,
+                                    location,
+                                    price,
+                                    image,
+                                    gender,
+                                    description,
+                                    date: date?.toISOString(),
+                                    time: time?.toISOString(),
+                                    endTime: endTime?.toISOString(),
+                                    preset,
+                                    categories: JSON.stringify(categories)
+                                }
+                            })
+                    } else {
+                        setStep(step+1)
+                    }}}
+                >
+                    <View style={styles.buttonContent}>
+                        <Text style={styles.buttonText}>
+                        {step !== 3 ? 'Next' : 'Review Game'}
+                        </Text>
+                        <Ionicons name="arrow-forward" size={16} color="white" />
+                    </View>
+                </Pressable>
+        </View>
         </View>
    )
 }
@@ -620,21 +658,37 @@ export const styles = StyleSheet.create({
     color: '#27253F',
     fontWeight: "400",
     },
-    nextStepButton: {
-        justifyContent:'center',
+    goBackButton: {
+        flex: 1,
+        justifyContent: 'center',
         alignItems: 'center',
+        backgroundColor: 'rgb(186, 186, 186)', // secondary
         borderRadius: 8,
-        paddingVertical: 8,
-        paddingHorizontal: 12,
-        marginHorizontal:15,
-        backgroundColor: "#D81159",
-        elevation: 3,
-        height:38
+        paddingVertical: 10,
     },
-    nextStepText:{
+    nextStepButton: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#D81159', // primary
+        borderRadius: 8,
+        paddingVertical: 10,
+    },
+    horizontalButton: {
+        justifyContent:'space-between',
+        marginHorizontal:15,
+        flexDirection:'row',
+        alignItems:'center'
+    },
+    buttonText:{
         color:'white',
         fontSize:14,
-        fontWeight:500
+        fontWeight:600
+    },
+    buttonContent: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6, // small spacing between icon + text
     },
     addCategoryButton:{
         justifyContent: 'center',
