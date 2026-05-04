@@ -16,35 +16,51 @@ import { Picker } from '@react-native-picker/picker'
 import DateTimePicker from '@react-native-community/datetimepicker'
 import { Octicons, Ionicons } from '@expo/vector-icons'
 import { useRouter, Link} from "expo-router";
+import { useLocalSearchParams } from "expo-router";
+import { useParsedParams } from "../../src/utils/useParsedParams";
+
 
 export default function createGame() {
-    const [sessionName, setSessionName] = useState("");
-    const [level, setLevel] = useState<SkillLevel | null>(null);
+    //hooks
+    const params = useLocalSearchParams()
+    const { getString, getNumber, getDate, getJSON } = useParsedParams();
+    const router = useRouter();
+
+    // --------------------
+    // STATE
+    // --------------------
+    const [sessionName, setSessionName] = useState(getString("sessionName") ?? "");    
+    const [level, setLevel] = useState(getString("level") ?? null);
     const [showLevelDropdown, setShowLevelDropdown]=useState(false)
-    const [location, setLocation] = useState("")
-    const [price, setPrice] = useState<number>()
-    const [image, setImage] = useState<string | null>(null)
-    const [date, setDate] = useState<Date | null>(null)
+    const [location, setLocation] = useState(getString("location") ?? "");
+    const [price, setPrice] = useState(getNumber("price"));
+    const [image, setImage] = useState(params.image ?? null);
+    const [date, setDate] = useState(getDate("date"));
     const [showDatePicker, setShowDatePicker] = useState(false)
-    const [time, setTime] = useState<Date | null>(null)
-    const [endTime, setEndTime] = useState<Date | null>(null)
+    const [time, setTime] = useState(getDate("time"));
+    const [endTime, setEndTime] = useState(getDate("endTime"));
     const [showTimePicker, setShowTimePicker] = useState(false)
     const [showEndTimePicker, setShowEndTimePicker] = useState(false)
-    const [gender, setGender] =useState<string|null>(null)
+    const [gender, setGender] = useState(getString("gender") ?? null);
     const [showGenderDropdown, setShowGenderDropDown]=useState(false)
-    const [description, setDescription]=useState("")
-    const [step, setStep]=useState(1)
+    const [description, setDescription] = useState(getString("description") ?? "");
+    const [step, setStep] = useState(
+    getNumber("step") ?? 1
+    );
     const [preset, setPreset] = useState<string>('Custom')
     const [showPresetDropdown, setShowPresetDropdown]=useState(false)
     const [presetName, setPresetName]= useState("")
     const [showSavePresetModal,setShowSavePresetModal] =useState(false)
-    const [categories, setCategories] =useState<Category[]>([
-        {position:'', slots:0}
-    ])
-
-    const router = useRouter();
+    const [categories, setCategories] = useState(
+        getJSON("categories", [{ position: "", slots: 0 }])
+    );
 
     const descriptionRef = useRef<TextInput>(null)
+
+
+    // --------------------
+    // STATIC DATA
+    // --------------------
     const steps=["Details","Date & Location", "Team Sheet"]
     const levelOptions=['Beginner','Intermediate','Advanced','Competitive']
     const genderOptions=['Female','Male','Mixed']
@@ -67,6 +83,8 @@ export default function createGame() {
             {position:'Middle', slots:2},   
         ]}
 
+
+
     const uploadImage = async () => {
         const result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ['images'],
@@ -75,6 +93,10 @@ export default function createGame() {
             setImage(result.assets[0].uri)
         }
     }
+
+    // ----------------------
+    // TEAM SHEET (CATEGORIES)
+    // ----------------------
 
     const removeSlot = (index:number) => {
         const updated =[...categories]
@@ -108,20 +130,23 @@ export default function createGame() {
         setCategories(updated)
     }
     
+    // ----------------------
+    // PRESET SYSTEM
+    // ----------------------
     const updatePresetOptions= (savedPreset:string) => {
         setPresetOptionsList(prev => [...prev, savedPreset])    
     }
 
+    // ----------------------
+    // VALIDATION (STEP 3)
+    // ----------------------
     const saveAsPreset =()=>setShowSavePresetModal(true)
-
     const canProceedFromStep3 = 
-        preset == 'None' ||
-        (categories.length> 0 &&
-        categories.every(cat => 
+        preset == 'None' || 
+        (categories.length> 0 && categories.every(cat => 
             cat.position.trim() !=='' &&
             cat.slots>0
         ))
-        
     const canSavePreset =
         categories.length>1 &&
         categories.every(cat =>

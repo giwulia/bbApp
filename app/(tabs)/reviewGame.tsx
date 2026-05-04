@@ -12,9 +12,7 @@ import {
 import type { SkillLevel, Category } from "../../src/api/types";
 import { useRef, useState } from "react"
 import * as ImagePicker from 'expo-image-picker'
-import { Picker } from '@react-native-picker/picker'
-import DateTimePicker from '@react-native-community/datetimepicker'
-import { Octicons, Ionicons } from '@expo/vector-icons'
+import { Octicons, Ionicons,Feather } from '@expo/vector-icons'
 import { useRouter, Link, useLocalSearchParams} from "expo-router";
 
 export default function reviewGame() {
@@ -89,7 +87,8 @@ export default function reviewGame() {
         },
         { 
             label: "DESCRIPTION",
-            value: details.description
+            value: details.description,
+            lines: 1 
         },
     ]
 
@@ -107,6 +106,7 @@ export default function reviewGame() {
         {
             label: "LOCATION",
             value: timeLocation.location ?? "-",
+            lines: 1 
         },
     ]
 
@@ -119,26 +119,36 @@ export default function reviewGame() {
             label: "POSITIONS",
             value: timeSheet.categories.length
             ? timeSheet.categories
-                .map((cat) => `${cat.position} x${cat.slots}`)
+                .map((cat) => `${cat.position} (${cat.slots})`)
                 .join(", ")
             : "-",
         },
     ]
 
-    function InfoRow({label,value} : {label:string; value:string|number}) {
+    function InfoRow({label,value,numberOfLines} : {label:string; value:string|number, numberOfLines?:number}) {
         return(
             <View style={styles.infoRow}>
                 <View style={styles.leftSide}>
                     <Text style={styles.text}>{label}</Text>
                 </View>
                 <View style={styles.rightSide}>
-                    <Text style={[styles.text, {color:"black"}]}>{value}</Text>
+                    <Text style={[styles.text, {color:"black"}]} numberOfLines={numberOfLines}  ellipsizeMode="tail">{value}</Text>
                 </View>
             </View>
         )
     }
 
-    
+    const goBackEdit = (step:number) => {
+        router.push({
+            pathname:'/createGame',
+            params:{
+                ...params,
+                step:String(step)
+            }
+        })
+    }
+
+
     return (
         <View style={[{backgroundColor:'white'},{ flex: 1 }]}>
             <Image source={{uri: params.image}} style = {styles.coverPhotoLayout}/>
@@ -148,19 +158,46 @@ export default function reviewGame() {
                     <Text style={styles.backButton}>BACK</Text>
                 </Pressable>
                 <View style={styles.box}>
-                    <Text style={styles.title}>Details</Text>
+                    <View style={[styles.infoRow, {marginBottom:12}]}>
+                        <View style={styles.leftSide}>
+                            <Text style={styles.title}>Details</Text>
+                        </View>
+                        <View style={styles.rightSide}>
+                            <Pressable onPress={()=> goBackEdit(1)}>
+                                    <Feather name='edit-3' size={16} color="gray" />
+                            </Pressable>
+                        </View>
+                    </View>
                     {detailsRows.map((row) => (
-                        <InfoRow key={row.label} label={row.label} value={String(row.value)} />
+                        <InfoRow key={row.label} label={row.label} value={String(row.value)} numberOfLines={row.lines} />
                     ))}
                 </View>
                 <View style={styles.box}>
-                    <Text style={styles.title}>Date & Location</Text>
+                    <View style={[styles.infoRow, {marginBottom:12}]}>
+                        <View style={styles.leftSide}>
+                            <Text style={styles.title}>Date & Location</Text>
+                        </View>
+                        <View style={styles.rightSide}>
+                            <Pressable onPress={()=> goBackEdit(2)}>
+                                    <Feather name='edit-3' size={16} color="gray" />
+                            </Pressable>
+                        </View>
+                    </View>
                         {timeLocationRows.map((row) => (
                             <InfoRow key={row.label} label={row.label} value={row.value} />
                         ))}
                 </View>
                 <View style={styles.box}>
-                <Text style={styles.title}>Team Sheet</Text>
+                    <View style={[styles.infoRow, {marginBottom:12}]}>
+                        <View style={styles.leftSide}>
+                            <Text style={styles.title}>Team Sheet</Text>
+                        </View>
+                        <View style={styles.rightSide}>
+                            <Pressable onPress={()=> goBackEdit(3)}>
+                                    <Feather name='edit-3' size={16} color="gray" />
+                            </Pressable>                        
+                        </View>
+                    </View>
                 {teamSheetRows.map((row)=> (
                     <InfoRow key={row.label} label ={row.label} value={row.value}/>
                 ))}
@@ -192,18 +229,18 @@ export const styles = StyleSheet.create({
         padding:12
     },
     title:{
-        fontSize:16,
+        fontSize:15,
         fontWeight:'500',
-        marginBottom:15
     },
     infoRow:{
-        flexDirection:'row'
+        flexDirection:'row',
+        alignItems:'center',
+        marginBottom:7
     },
     text:{
-        fontSize:13,
+        fontSize:12.5,
         fontWeight:'500',
         color:'gray',
-        marginBottom:8
     },
     leftSide: {
         flex: 2,
