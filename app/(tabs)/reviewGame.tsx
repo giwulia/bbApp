@@ -19,7 +19,8 @@ export default function reviewGame() {
     const router = useRouter()
 
     type Params = {
-        sessionName: string
+        gameTitle: string
+        type: string
         level: string
         price: string
         gender: string
@@ -29,14 +30,17 @@ export default function reviewGame() {
         time: string
         endTime:string
         location: string
+        locationUrl: string
         categories: string,
+        totalSpots:string,
         preset: string
     }
 
     const params = useLocalSearchParams<Params>()
 
     const details = {
-        sessionName: params.sessionName,
+        gameTitle: params.gameTitle,
+        type: params.type,
         level: params.level,
         price: Number(params.price),
         gender: params.gender,
@@ -47,7 +51,8 @@ export default function reviewGame() {
         date: params.date ? new Date(params.date) : null,
         time: params.time ? new Date(params.time) : null,
         endTime:params.endTime? new Date(params.endTime): null,      
-        location: params.location
+        location: params.location,
+        locationUrl: params.locationUrl,
     }
 
     const timeRange =
@@ -61,7 +66,8 @@ export default function reviewGame() {
           })}`
         : "-";
 
-    const timeSheet ={
+    const teamSheet ={
+        totalSpots: params.totalSpots,
         preset: params.preset,
         categories: params.categories
         ? (JSON.parse(params.categories) as Category[])
@@ -69,13 +75,17 @@ export default function reviewGame() {
     }
 
     const detailsRows = [
-        { 
-            label: "NAME",
-            value: details.sessionName 
+        {
+            label: "GAME TITLE",
+            value: details.gameTitle
         },
-        { 
+        {
+            label: "SESSION TYPE",
+            value: details.type
+        },
+        {
             label: "LEVEL",
-            value: details.level 
+            value: details.level
         },
         { 
             label: "PRICE (£)",
@@ -112,13 +122,17 @@ export default function reviewGame() {
 
     const teamSheetRows = [
         {
+            label: "PLAYERS",
+            value: teamSheet.totalSpots ?? "-",
+        },
+        {
             label: "PRESET",
-            value: timeSheet.preset ?? "-",
+            value: teamSheet.preset ?? "-",
         },
         {
             label: "POSITIONS",
-            value: timeSheet.categories.length
-            ? timeSheet.categories
+            value: teamSheet.categories.length
+            ? teamSheet.categories
                 .map((cat) => `${cat.position} (${cat.slots})`)
                 .join(", ")
             : "-",
@@ -132,25 +146,25 @@ export default function reviewGame() {
                     <Text style={styles.text}>{label}</Text>
                 </View>
                 <View style={styles.rightSide}>
-                    <Text style={[styles.text, {color:"black"}]} numberOfLines={numberOfLines}  ellipsizeMode="tail">{value}</Text>
+                    <Text style={[styles.text, {color:"black", flex: 1, textAlign: 'right'}]} numberOfLines={numberOfLines} ellipsizeMode="tail">{value}</Text>
                 </View>
             </View>
         )
     }
 
-    const goBackEdit = (step:number) => {
-        router.push({
-            pathname:'/createGame',
-            params:{
-                ...params,
-                step:String(step)
-            }
-        })
-    }
+    const goBackEdit = (step: number) => {
+    router.push({
+        pathname: "/createGame",
+        params: {
+            step: String(step)
+        }
+    })
+}
 
 
     return (
         <View style={[{backgroundColor:'white'},{ flex: 1 }]}>
+            <ScrollView contentContainerStyle={{ paddingBottom: 90 }}>
             <Image source={{uri: params.image}} style = {styles.coverPhotoLayout}/>
             <View style={styles.layout}>
                 <Pressable style={styles.buttonContent} onPress={()=> router.back()}>
@@ -164,7 +178,7 @@ export default function reviewGame() {
                         </View>
                         <View style={styles.rightSide}>
                             <Pressable onPress={()=> goBackEdit(1)}>
-                                    <Feather name='edit-3' size={16} color="gray" />
+                                    <Feather name='edit-3' size={16} color="#D81159" />
                             </Pressable>
                         </View>
                     </View>
@@ -179,7 +193,7 @@ export default function reviewGame() {
                         </View>
                         <View style={styles.rightSide}>
                             <Pressable onPress={()=> goBackEdit(2)}>
-                                    <Feather name='edit-3' size={16} color="gray" />
+                                    <Feather name='edit-3' size={16} color="#D81159" />
                             </Pressable>
                         </View>
                     </View>
@@ -194,7 +208,7 @@ export default function reviewGame() {
                         </View>
                         <View style={styles.rightSide}>
                             <Pressable onPress={()=> goBackEdit(3)}>
-                                    <Feather name='edit-3' size={16} color="gray" />
+                                    <Feather name='edit-3' size={16} color="#D81159" />
                             </Pressable>                        
                         </View>
                     </View>
@@ -203,6 +217,10 @@ export default function reviewGame() {
                 ))}
             </View>
             </View>
+            </ScrollView>
+            <Pressable style={styles.publishButton}>
+                <Text style={styles.publishButtonText}>Publish Game</Text>
+            </Pressable>
         </View>
     )
 
@@ -211,7 +229,7 @@ export default function reviewGame() {
 export const styles = StyleSheet.create({
     coverPhotoLayout: {
         width: '100%',
-        height: 250,
+        height: 220,
         justifyContent: 'center',
         alignItems: 'center',
         backgroundColor: 'rgb(117, 117, 118)',
@@ -224,7 +242,7 @@ export const styles = StyleSheet.create({
         width:'100%',
         borderWidth: 1,
         borderColor:'silver',
-        borderRadius:4,
+        borderRadius:5,
         marginBottom:20,
         padding:12
     },
@@ -243,7 +261,7 @@ export const styles = StyleSheet.create({
         color:'gray',
     },
     leftSide: {
-        flex: 2,
+        flex: 1,
     },
     rightSide: {
         flex: 1,
@@ -262,5 +280,24 @@ export const styles = StyleSheet.create({
         alignItems: 'center',
         gap: 4, // small spacing between icon + text
         marginVertical:20
+    },
+    publishButton: {
+        position: 'absolute',
+        bottom: 0,
+        left: 15,
+        right: 15,
+        justifyContent:'center',
+        borderRadius: 8,
+        paddingHorizontal: 12,
+        backgroundColor: "#D81159",
+        shadowColor: "#D81159",
+        paddingVertical: 10,
+    },
+    publishButtonText:{
+        color:"white",
+        fontSize:14,
+        fontWeight:"700",
+        marginHorizontal:12,
+        alignSelf:'center'
     },
 })

@@ -1,22 +1,20 @@
-import { 
+import { Ionicons, Octicons } from '@expo/vector-icons';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import * as ImagePicker from 'expo-image-picker';
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useEffect, useState } from "react";
+import {
+    Image,
+    Keyboard,
+    Modal,
     Pressable,
-    ScrollView,
     StyleSheet,
     Text,
     TextInput,
-    View,
-    Modal,
-    KeyboardAvoidingView,
-    Platform
+    View
 } from "react-native";
-import type { SkillLevel, Category } from "../../src/api/types";
-import { useRef, useState } from "react"
-import * as ImagePicker from 'expo-image-picker'
-import { Picker } from '@react-native-picker/picker'
-import DateTimePicker from '@react-native-community/datetimepicker'
-import { Octicons, Ionicons } from '@expo/vector-icons'
-import { useRouter, Link} from "expo-router";
-import { useLocalSearchParams } from "expo-router";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import type { Category, SkillLevel } from "../../src/api/types";
 import { useParsedParams } from "../../src/utils/useParsedParams";
 
 
@@ -29,12 +27,15 @@ export default function createGame() {
     // --------------------
     // STATE
     // --------------------
-    const [sessionName, setSessionName] = useState(getString("sessionName") ?? "");    
+    const [gameTitle, setGameTitle] = useState(getString("gameTitle") ?? "");   
+    const [type, setType] = useState(getString("type")?? null)
+    const [showTypeDropdown, setShowTypeDropdown]=useState(false) 
     const [level, setLevel] = useState(getString("level") ?? null);
     const [showLevelDropdown, setShowLevelDropdown]=useState(false)
     const [location, setLocation] = useState(getString("location") ?? "");
+    const [locationUrl, setLocationUrl] = useState(getString("locationUrl") ?? "");
     const [price, setPrice] = useState(getNumber("price"));
-    const [image, setImage] = useState(params.image ?? null);
+    const [image, setImage] = useState(getString("image") ?? null);
     const [date, setDate] = useState(getDate("date"));
     const [showDatePicker, setShowDatePicker] = useState(false)
     const [time, setTime] = useState(getDate("time"));
@@ -44,10 +45,13 @@ export default function createGame() {
     const [gender, setGender] = useState(getString("gender") ?? null);
     const [showGenderDropdown, setShowGenderDropDown]=useState(false)
     const [description, setDescription] = useState(getString("description") ?? "");
-    const [step, setStep] = useState(
-    getNumber("step") ?? 1
-    );
-    const [preset, setPreset] = useState<string>('Custom')
+    const [step, setStep] = useState(1);
+    useEffect(() => {
+        const newStep = getNumber("step") ?? 1;
+        setStep(newStep);
+    }, [params.step]);
+    const [totalSpots, setTotalSpots] = useState(getNumber("totalSpots"))
+    const [preset, setPreset] = useState<string>('None')
     const [showPresetDropdown, setShowPresetDropdown]=useState(false)
     const [presetName, setPresetName]= useState("")
     const [showSavePresetModal,setShowSavePresetModal] =useState(false)
@@ -55,13 +59,12 @@ export default function createGame() {
         getJSON("categories", [{ position: "", slots: 0 }])
     );
 
-    const descriptionRef = useRef<TextInput>(null)
-
 
     // --------------------
     // STATIC DATA
     // --------------------
     const steps=["Details","Date & Location", "Team Sheet"]
+    const typeOptions=['Game','Drill']
     const levelOptions=['Beginner','Intermediate','Advanced','Competitive']
     const genderOptions=['Female','Male','Mixed']
     const presetOptions=["None","Custom","5:1 (18)", "5:1 (12)"]
@@ -156,47 +159,78 @@ export default function createGame() {
 
     return (
         <View style={[{backgroundColor:'white'},{ flex: 1 }]}>
-            <KeyboardAvoidingView
-            style={{flex:1}}
-            behavior={Platform.OS === 'ios'? 'padding':'height'}
-        >
             <Pressable style={styles.coverPhotoLayout} onPress={uploadImage}>
-                <Text style={[styles.inputFieldTitle, { color: 'white' }]}>TAP TO UPLOAD COVER PHOTO</Text>
-                    <View style={{ position: 'absolute', bottom: 10, left: 20 }}>
-                <Text style={{ color: 'white', fontSize: 22, fontWeight: '500' }}>CREATE GAME</Text>
-                </View>
+                {image ? (
+                    <Image
+                        source={{ uri: image }}
+                        style={{ width: "100%", height: "100%" }}
+                        resizeMode="cover"
+                    />
+                ) : (
+                    <>
+                    <Text style={[styles.inputFieldTitle, { color: 'white' }]}>TAP TO UPLOAD COVER PHOTO</Text>
+                        <View style={{ position: 'absolute', bottom: 10, left: 20 }}>
+                        <Text style={{ color: 'white', fontSize: 22, fontWeight: '500' }}>CREATE GAME</Text>
+                    </View>
+                    </>
+                )}
             </Pressable>
             <View style={styles.layout}>
                     <View style={styles.stepCard}>
                         {steps.map((item,index) =>(
                         <View key={item} style={styles.stepColumn}>
-                                <View style={[styles.horizontalLine, step === index + 1 && { backgroundColor: '#D81159'}]}/>
-                                <Text style={[styles.stepTitle, step ==index +1 && {color:'#D81159',fontWeight:'600'}]}>{item}</Text>
+                                <View style={[styles.horizontalLine, step === index + 1 && { backgroundColor: '#D81159',height:1.5}]}/>
+                                <Text style={[styles.stepTitle, step ==index +1 && {color:'#D81159',fontWeight:'700'}]}>{item}</Text>
                         </View>
                         ))}
                     </View>
             </View>
-            <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: 120 }}>
+            <KeyboardAwareScrollView keyboardShouldPersistTaps="handled" extraScrollHeight={10} enableOnAndroid enableAutomaticScroll style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 80 }}>
                 <View style={styles.layout}>
 
                     {step === 1 && (
                         <>
-                            {/* SESSION NAME */}
-                            <Text style={styles.inputFieldTitle}>SESSION NAME</Text>
+                            {/* GAME TITLE */}
+                            <Text style={styles.inputFieldTitle}>GAME TITLE</Text>
                             <View style={styles.inputFieldBar}>
                                 <TextInput
                                     style={[styles.inputFieldText, { flex: 1 }]}
-                                    onChangeText={setSessionName}
-                                    value={sessionName}
+                                    onChangeText={setGameTitle}
+                                    value={gameTitle}
                                     placeholder="Enter name"
                                     placeholderTextColor="silver"
                                 />
                             </View>
 
+                            {/* GAME TYPE */}
+                            <Text style={styles.inputFieldTitle}>SESSION TYPE</Text>
+                            <Pressable style={styles.inputFieldBar} onPress={() => {Keyboard.dismiss(); setShowTypeDropdown(!showTypeDropdown)}}>
+                                <Text style={[styles.inputFieldText, { flex: 1, color: type ? "#27253F" : "silver" }]}>{type ?? 'Select type'}</Text>
+                                <Ionicons name={showTypeDropdown ? "chevron-up" : "chevron-down"} size={16} color="silver" />
+                            </Pressable>
+                            {showTypeDropdown && (
+                                <View style={styles.dropdown}>
+                                    {typeOptions.map(option => (
+                                        <Pressable
+                                            key={option}
+                                            style={styles.dropdownItem}
+                                            onPress={() => {
+                                                setType(option)
+                                                setShowTypeDropdown(false)
+                                            }}
+                                        >
+                                            <Text style={[styles.dropdownText, { flex: 1 }]}>{option}</Text>
+                                            {type === option && <Ionicons name="checkmark" size={16} color="#D81159" />}
+                                        </Pressable>
+                                    ))}
+                                </View>
+                            )}
+
                             {/* LEVEL */}
                             <Text style={styles.inputFieldTitle}>LEVEL</Text>
-                            <Pressable style={styles.inputFieldBar} onPress={() => setShowLevelDropdown(!showLevelDropdown)}>
-                                <Text style={[styles.inputFieldText,{ color: level ? "#27253F" : "silver" }]}>{level ?? 'Select level'}</Text>
+                            <Pressable style={styles.inputFieldBar} onPress={() => {Keyboard.dismiss(); setShowLevelDropdown(!showLevelDropdown)}}>
+                                <Text style={[styles.inputFieldText, { flex: 1, color: level ? "#27253F" : "silver" }]}>{level ?? 'Select level'}</Text>
+                                <Ionicons name={showLevelDropdown ? "chevron-up" : "chevron-down"} size={16} color="silver" />
                             </Pressable>
                             {showLevelDropdown && (
                                 <View style={styles.dropdown}>
@@ -209,9 +243,8 @@ export default function createGame() {
                                                 setShowLevelDropdown(false)
                                             }}
                                         >
-                                            <Text style={styles.dropdownText}>
-                                                {option}
-                                            </Text>
+                                            <Text style={[styles.dropdownText, { flex: 1 }]}>{option}</Text>
+                                            {level === option && <Ionicons name="checkmark" size={16} color="#D81159" />}
                                         </Pressable>
                                     ))}
                                 </View>
@@ -219,10 +252,11 @@ export default function createGame() {
 
                             {/* GENDER */}
                             <Text style={styles.inputFieldTitle}>GENDER</Text>
-                            <Pressable style={styles.inputFieldBar} onPress={() => setShowGenderDropDown(!showGenderDropdown)}>
-                                <Text style={[styles.inputFieldText,{ color: gender ? "#27253F" : "silver" }]}>
-                                    {gender ?? 'Select Gender'}
+                            <Pressable style={styles.inputFieldBar} onPress={() => {Keyboard.dismiss(); setShowGenderDropDown(!showGenderDropdown)}}>
+                                <Text style={[styles.inputFieldText, { flex: 1, color: gender ? "#27253F" : "silver" }]}>
+                                    {gender ?? 'Select gender'}
                                 </Text>
+                                <Ionicons name={showGenderDropdown ? "chevron-up" : "chevron-down"} size={16} color="silver" />
                             </Pressable>
                             {showGenderDropdown && (
                                 <View style={styles.dropdown}>
@@ -235,9 +269,8 @@ export default function createGame() {
                                                 setShowGenderDropDown(false)
                                             }}
                                         >
-                                            <Text style={styles.dropdownText}>
-                                                {option}
-                                            </Text>
+                                            <Text style={[styles.dropdownText, { flex: 1 }]}>{option}</Text>
+                                            {gender === option && <Ionicons name="checkmark" size={16} color="#D81159" />}
                                         </Pressable>
                                     ))}
                                 </View>
@@ -258,21 +291,15 @@ export default function createGame() {
 
                             {/* DESCRIPTION */}
                             <Text style={styles.inputFieldTitle}>DESCRIPTION</Text>
-                            <Pressable
-                                style={styles.inputFieldBarLarge}
-                                onPress={() => descriptionRef.current?.focus()}
-                            >
-                                <TextInput
-                                    ref={descriptionRef}
-                                    style={styles.inputFieldText}
-                                    onChangeText={setDescription}
-                                    value={description}
-                                    placeholder="Add game description"
-                                    placeholderTextColor="silver"
-                                    multiline
-                                    textAlignVertical="top"
-                                />
-                            </Pressable>
+                            <TextInput
+                                style={[styles.inputFieldBarLarge, styles.inputFieldText]}
+                                onChangeText={setDescription}
+                                value={description}
+                                placeholder="Describe your session"
+                                placeholderTextColor="silver"
+                                multiline
+                                textAlignVertical="top"
+                            />
                         </>
                     )}
 
@@ -284,6 +311,18 @@ export default function createGame() {
                                     {date ? date.toLocaleDateString('en-GB') : 'DD/MM/YYYY'}
                                 </Text>
                             </Pressable>
+                            {showDatePicker && (
+                                <View style={{ marginBottom: 18 }}>
+                                    <DateTimePicker
+                                        value={date ?? new Date()}
+                                        mode="date"
+                                        onChange={(_, selectedDate) => {
+                                            setShowDatePicker(false)
+                                            if (selectedDate) setDate(selectedDate)
+                                        }}
+                                    />
+                                </View>
+                            )}
                             {/* TIME */}
                             <Text style={styles.inputFieldTitle}>START & END TIME</Text>
                             <View style={styles.inputFieldDual}>
@@ -298,41 +337,49 @@ export default function createGame() {
                                     </Text>
                                 </Pressable>
                             </View>
-                            {showDatePicker && (
-                                <DateTimePicker
-                                    value={date ?? new Date()}
-                                    mode="date"
-                                    onChange={(event, selectedDate) => {
-                                        setShowDatePicker(false)
-                                        if (selectedDate) setDate(selectedDate)
-                                    }}
-                                />
-                            )}
                             {showTimePicker && (
-                                <DateTimePicker
-                                    value={time ?? new Date()}
-                                    mode="time"
-                                    display="spinner"
-                                    onChange={(event, selectedTime) => {
-                                        setShowTimePicker(false)
-                                        if (selectedTime) setTime(selectedTime)
-                                    }}
-                                />
+                                <View style={styles.timePickerContainer}>
+                                    <View style={styles.timePickerHeader}>
+                                        <Pressable onPress={() => setShowTimePicker(false)}>
+                                            <Text style={styles.timePickerCancel}>Cancel</Text>
+                                        </Pressable>
+                                        <Pressable onPress={() => setShowTimePicker(false)}>
+                                            <Text style={styles.timePickerDone}>Done</Text>
+                                        </Pressable>
+                                    </View>
+                                    <DateTimePicker
+                                        value={time ?? new Date()}
+                                        mode="time"
+                                        display="spinner"
+                                        onChange={(_, selectedTime) => {
+                                            if (selectedTime) setTime(selectedTime)
+                                        }}
+                                    />
+                                </View>
                             )}
                             {showEndTimePicker && (
-                            <DateTimePicker
-                                value={endTime ?? new Date()}
-                                mode="time"
-                                display="spinner"
-                                onChange={(event, selectedTime) => {
-                                    setShowEndTimePicker(false)
-                                    if (selectedTime) setEndTime(selectedTime)
-                                }}
-                            />
-                        )}
-                            <Pressable style={styles.recurringEventButton}>
+                                <View style={styles.timePickerContainer}>
+                                    <View style={styles.timePickerHeader}>
+                                        <Pressable onPress={() => setShowEndTimePicker(false)}>
+                                            <Text style={styles.timePickerCancel}>Cancel</Text>
+                                        </Pressable>
+                                        <Pressable onPress={() => setShowEndTimePicker(false)}>
+                                            <Text style={styles.timePickerDone}>Done</Text>
+                                        </Pressable>
+                                    </View>
+                                    <DateTimePicker
+                                        value={endTime ?? new Date()}
+                                        mode="time"
+                                        display="spinner"
+                                        onChange={(_, selectedTime) => {
+                                            if (selectedTime) setEndTime(selectedTime)
+                                        }}
+                                    />
+                                </View>
+                            )}
+                            {/* <Pressable style={styles.recurringEventButton}>
                                 <Text style={[styles.inputFieldText, {color:'white'}]}>SET RECURRING EVENT</Text>
-                            </Pressable>
+                            </Pressable> */}
 
                             {/* LOCATION */}
                             <Text style={styles.inputFieldTitle}>LOCATION</Text>
@@ -341,8 +388,22 @@ export default function createGame() {
                                     style={[styles.inputFieldText, { flex: 1 }]}
                                     onChangeText={setLocation}
                                     value={location}
-                                    placeholder="Enter address"
+                                    placeholder="Enter Venue"
                                     placeholderTextColor="silver"
+                                />
+                            </View>
+
+                            {/* LOCATION URL */}
+                            <Text style={styles.inputFieldTitle}>GOOGLE MAPS URL</Text>
+                            <View style={styles.inputFieldBar}>
+                                <TextInput
+                                    style={[styles.inputFieldText, { flex: 1 }]}
+                                    onChangeText={setLocationUrl}
+                                    value={locationUrl}
+                                    placeholder="https://"
+                                    placeholderTextColor="silver"
+                                    autoCapitalize="none"
+                                    keyboardType="url"
                                 />
                             </View>
                         </>
@@ -350,10 +411,24 @@ export default function createGame() {
 
                     {step === 3 && (
                         <>
+                            {/* TOTAL SPOTS */}
+                            <Text style={styles.inputFieldTitle}>PLAYERS</Text>
+                            <View style={styles.inputFieldBar}>
+                                <TextInput
+                                    style={[styles.inputFieldText, { flex: 1 }]}
+                                    onChangeText={(val) => setTotalSpots(Number(val))}
+                                    value={totalSpots?.toString() ?? ""}
+                                    placeholder="0"
+                                    keyboardType="numeric"
+                                    placeholderTextColor="silver"
+                                />
+                            </View>
+
                             {/*PRESET */}
                             <Text style= {styles.inputFieldTitle}>PRESET</Text>
-                            <Pressable style = {styles.inputFieldBar} onPress={()=> setShowPresetDropdown(!showPresetDropdown)}>
-                                <Text style ={styles.inputFieldText}>{preset}</Text>
+                            <Pressable style={styles.inputFieldBar} onPress={() => setShowPresetDropdown(!showPresetDropdown)}>
+                                <Text style={[styles.inputFieldText, { flex: 1 }]}>{preset}</Text>
+                                <Ionicons name={showPresetDropdown ? "chevron-up" : "chevron-down"} size={16} color="silver" />
                             </Pressable>
                             {showPresetDropdown && (
                                 <View style={styles.dropdown}>
@@ -378,9 +453,10 @@ export default function createGame() {
                                                 }
                                             }}
                                         >
-                                            <Text style={styles.dropdownText}>
+                                            <Text style={[styles.dropdownText, { flex: 1 }]}>
                                                 {option.charAt(0).toUpperCase() + option.slice(1)}
                                             </Text>
+                                            {preset === option && <Ionicons name="checkmark" size={16} color="#D81159" />}
                                         </Pressable>
                                     ))}
                                 </View>
@@ -426,11 +502,11 @@ export default function createGame() {
                                                 <Pressable style={styles.addCategoryButton} onPress={addCantegoryBox}>
                                                     <Text style={styles.buttonText}>ADD CATEGORY</Text>
                                                 </Pressable>
-                                                {canSavePreset && (
+                                                {/* {canSavePreset && (
                                                     <Pressable style={styles.savePresetButton} onPress={saveAsPreset}>
                                                         <Text style={styles.savePresetText}>Save settings as preset →</Text>
                                                     </Pressable>
-                                                )}
+                                                )} */}
                                             </>
                                         )}
                                     </View>
@@ -487,7 +563,7 @@ export default function createGame() {
                     )}
 
                 </View>
-            </ScrollView>
+            </KeyboardAwareScrollView>
             <Modal 
                 visible={showSavePresetModal}
                 transparent
@@ -521,7 +597,6 @@ export default function createGame() {
                         </View>
                     </View>
             </Modal>
-        </KeyboardAvoidingView>
         <View style={styles.horizontalButton}>
             <Pressable disabled={step === 1} style ={[styles.goBackButton, step === 1 && {opacity: 0.4}]} onPress = {()=> {
                 if (step !=1) {
@@ -544,9 +619,11 @@ export default function createGame() {
                             router.push({
                                 pathname: "/reviewGame",
                                 params: {
-                                    sessionName,
+                                    gameTitle,
+                                    type,
                                     level,
                                     location,
+                                    locationUrl,
                                     price,
                                     image,
                                     gender,
@@ -554,6 +631,7 @@ export default function createGame() {
                                     date: date?.toISOString(),
                                     time: time?.toISOString(),
                                     endTime: endTime?.toISOString(),
+                                    totalSpots,
                                     preset,
                                     categories: JSON.stringify(categories)
                                 }
@@ -568,7 +646,7 @@ export default function createGame() {
                         </Text>
                         <Ionicons name="arrow-forward" size={16} color="white" />
                     </View>
-                </Pressable>
+            </Pressable>
         </View>
         </View>
    )
@@ -577,7 +655,7 @@ export default function createGame() {
 export const styles = StyleSheet.create({
     coverPhotoLayout: {
         width: '100%',
-        height: 250,
+        height: 220,
         justifyContent: 'center',
         alignItems: 'center',
         backgroundColor: 'rgb(117, 117, 118)',
@@ -673,6 +751,8 @@ export const styles = StyleSheet.create({
         overflow: 'hidden',
     },
     dropdownItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
         paddingHorizontal: 10,
         paddingVertical: 12,
         borderBottomWidth: 1,
@@ -687,7 +767,7 @@ export const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: 'rgb(186, 186, 186)', // secondary
+        backgroundColor: 'rgb(163, 163, 163)', // secondary
         borderRadius: 8,
         paddingVertical: 10,
     },
@@ -814,6 +894,30 @@ export const styles = StyleSheet.create({
         fontSize: 14,
         fontWeight: '500',
         color: '#27253F',
+    },
+    timePickerContainer: {
+        borderColor: 'silver',
+        borderWidth: 1,
+        borderRadius: 8,
+        marginBottom: 18,
+        overflow: 'hidden',
+    },
+    timePickerHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        paddingHorizontal: 16,
+        paddingVertical: 10,
+        borderBottomColor: '#eee',
+        borderBottomWidth: 1,
+    },
+    timePickerCancel: {
+        fontSize: 14,
+        color: 'dimgray',
+    },
+    timePickerDone: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#D81159',
     },
 }
 )
