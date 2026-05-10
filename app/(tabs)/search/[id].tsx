@@ -1,8 +1,8 @@
 import ParallaxScrollView from '@/components/parallax-scroll-view';
 import { GestureHandlerRootView,Gesture, GestureDetector, ScrollView } from 'react-native-gesture-handler';
-import Animated, { 
-    useSharedValue, 
-    useAnimatedStyle, 
+import Animated, {
+    useSharedValue,
+    useAnimatedStyle,
     withSpring,
     runOnJS
 } from 'react-native-reanimated';
@@ -12,7 +12,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, Link, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Image, Modal, Pressable, StyleSheet, Text, View, Dimensions } from 'react-native';
-import { formatGameDate, formatTime } from "../../src/utils/format";
+import { formatGameDate, formatTime } from "../../../src/utils/format";
 
 function DefaultAvatar({name}:{name:string}) {
     const parts = name.split(" ");
@@ -167,7 +167,7 @@ export default function Game() {
                 <ParallaxScrollView
                     headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
                     headerImage={
-                    <Image source={{ uri: game.img }} style={styles.gameImage} 
+                    <Image source={{ uri: game.img }} style={styles.gameImage}
                         onLoadEnd={()=> setImgReady(true)}
                     />
                 }>
@@ -197,7 +197,7 @@ export default function Game() {
                         </View>
                     </View>
                     <View style={styles.horizontalLine}/>
-                    {isTeamView? 
+                    {isTeamView?
                         <GestureDetector gesture={pan}>
                             <Animated.View style={[{ flex: 1 }, animatedStyle]}>
                                     {positions.map(({ key, label }) => {
@@ -271,7 +271,7 @@ export default function Game() {
                             <Text style={[styles.sectionTitle]}>Refund Policy</Text>
                             <View style = {[styles.sectionCard, {marginBottom: 50}]}>
                                 <Text style={styles.sectionText}>
-                                    This game has a 24-hour cancellation policy, and if you cancel within that period, you’ll be eligible for a full 100% refund.
+                                    This game has a 24-hour cancellation policy, and if you cancel within that period, you'll be eligible for a full 100% refund.
                                 </Text>
                             </View>
                         </>

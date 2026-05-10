@@ -13,9 +13,9 @@ import {
     TextInput,
     View
 } from "react-native";
-import { listGames } from "../../src/api/client";
-import type { GameResponse, SkillLevel } from "../../src/api/types";
-import { formatDateFilter, formatGameDate, formatTime } from "../../src/utils/format";
+import { listGames } from "../../../src/api/client";
+import type { GameResponse, SkillLevel } from "../../../src/api/types";
+import { formatDateFilter, formatGameDate, formatTime } from "../../../src/utils/format";
 
 
 export default function Games() {
@@ -163,7 +163,7 @@ export default function Games() {
             });
         }, [games, query, filters.level, filters.city,filters.gender,filters.type, date]);
 
-    
+
         if (isLoading) {
         return (
             <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
@@ -534,7 +534,7 @@ export const styles = StyleSheet.create({
         paddingBottom:8,
         borderWidth: 1,
         borderColor: "#e0e0e0",
-        overflow: "hidden",   // 
+        overflow: "hidden",   //
 
         shadowColor: "#000",
         shadowOpacity: 0.05,

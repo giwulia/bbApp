@@ -8,7 +8,7 @@ import {
     Text,
     View
 } from "react-native";
-import type { Category } from "../src/api/types";
+import type { Category } from "../../../src/api/types";
 
 export default function reviewGame() {
     const router = useRouter()
@@ -45,7 +45,7 @@ export default function reviewGame() {
     const timeLocation = {
         date: params.date ? new Date(params.date) : null,
         time: params.time ? new Date(params.time) : null,
-        endTime:params.endTime? new Date(params.endTime): null,      
+        endTime:params.endTime? new Date(params.endTime): null,
         location: params.location,
         locationUrl: params.locationUrl,
     }
@@ -82,18 +82,18 @@ export default function reviewGame() {
             label: "LEVEL",
             value: details.level
         },
-        { 
+        {
             label: "PRICE (£)",
-            value: details.price 
+            value: details.price
         },
-        { 
+        {
             label: "GENDER",
             value: details.gender
         },
-        { 
+        {
             label: "DESCRIPTION",
             value: details.description,
-            lines: 1 
+            lines: 1
         },
     ]
 
@@ -111,7 +111,7 @@ export default function reviewGame() {
         {
             label: "LOCATION",
             value: timeLocation.location ?? "-",
-            lines: 1 
+            lines: 1
         },
     ]
 
@@ -149,7 +149,7 @@ export default function reviewGame() {
 
     const goBackEdit = (step: number) => {
         router.push({
-            pathname: "/createGame",
+            pathname: "/createFlow/createGame",
             params: {
                 step: String(step),
                 gameTitle: params.gameTitle,
@@ -220,7 +220,7 @@ export default function reviewGame() {
                         <View style={styles.rightSide}>
                             <Pressable onPress={()=> goBackEdit(3)}>
                                     <Feather name='edit-3' size={16} color="#D81159" />
-                            </Pressable>                        
+                            </Pressable>
                         </View>
                     </View>
                 {teamSheetRows.map((row)=> (
@@ -247,7 +247,7 @@ export const styles = StyleSheet.create({
         marginBottom:15,
     },
     layout: {
-        marginHorizontal: 20,    
+        marginHorizontal: 20,
     },
     box: {
         width:'100%',

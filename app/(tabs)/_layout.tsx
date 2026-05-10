@@ -27,12 +27,12 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="create"
+        name="createFlow"
         options={{
           title: 'Host',
           tabBarIcon: () => <Ionicons name="add-circle" size={28} color="#D81159" />,
           tabBarButton: ({ style, children }) => (
-            <Pressable style={style} onPress={() => router.push('/createGame')}>{children}</Pressable>
+            <Pressable style={style} onPress={() => router.push('/createFlow/createGame')}>{children}</Pressable>
           ),
         }}
       />
@@ -41,9 +41,6 @@ export default function TabLayout() {
         options={{
           title: 'Search',
           tabBarIcon: ({ color }) => <Ionicons name="search" size={26} color={color} />,
-          tabBarButton: ({ style, children }) => (
-            <Pressable style={style} onPress={() => router.push('/search')}>{children}</Pressable>
-          ),
         }}
       />
       <Tabs.Screen

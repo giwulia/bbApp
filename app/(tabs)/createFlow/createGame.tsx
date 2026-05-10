@@ -15,8 +15,8 @@ import {
     View
 } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
-import type { Category, SkillLevel } from "../src/api/types";
-import { useParsedParams } from "../src/utils/useParsedParams";
+import type { Category, SkillLevel } from "../../../src/api/types";
+import { useParsedParams } from "../../../src/utils/useParsedParams";
 
 
 export default function createGame() {
@@ -28,9 +28,9 @@ export default function createGame() {
     // --------------------
     // STATE
     // --------------------
-    const [gameTitle, setGameTitle] = useState(getString("gameTitle") ?? "");   
+    const [gameTitle, setGameTitle] = useState(getString("gameTitle") ?? "");
     const [type, setType] = useState(getString("type")?? null)
-    const [showTypeDropdown, setShowTypeDropdown]=useState(false) 
+    const [showTypeDropdown, setShowTypeDropdown]=useState(false)
     const [level, setLevel] = useState(getString("level") ?? null);
     const [showLevelDropdown, setShowLevelDropdown]=useState(false)
     const [location, setLocation] = useState(getString("location") ?? "");
@@ -84,14 +84,14 @@ export default function createGame() {
             {position:'Outside', slots:4},
             {position:'Libero', slots:2},
             {position:'Opposite', slots:2},
-            {position:'Middle', slots:2},   
+            {position:'Middle', slots:2},
         ],
         "Custom":[
             {position:'Setter', slots:0},
             {position:'Outside', slots:0},
             {position:'Libero', slots:0},
             {position:'Opposite', slots:0},
-            {position:'Middle', slots:0},   
+            {position:'Middle', slots:0},
         ]
     }
 
@@ -141,12 +141,12 @@ export default function createGame() {
         updated[index] = {...updated[index], [field]:value}
         setCategories(updated)
     }
-    
+
     // ----------------------
     // PRESET SYSTEM
     // ----------------------
     const updatePresetOptions= (savedPreset:string) => {
-        setPresetOptionsList(prev => [...prev, savedPreset])    
+        setPresetOptionsList(prev => [...prev, savedPreset])
     }
 
     const spotsSelected = categories.reduce((total, cat) => total + cat.slots, 0)
@@ -421,9 +421,6 @@ export default function createGame() {
                                     />
                                 </View>
                             )}
-                            {/* <Pressable style={styles.recurringEventButton}>
-                                <Text style={[styles.inputFieldText, {color:'white'}]}>SET RECURRING EVENT</Text>
-                            </Pressable> */}
 
                             {/* LOCATION */}
                             <Text style={styles.inputFieldTitle}>LOCATION <Text style={styles.required}>*</Text></Text>
@@ -541,7 +538,7 @@ export default function createGame() {
 
 
                             {/* PRESET CONFIG */}
-                            {preset !== 'Custom' && preset != 'None' && 
+                            {preset !== 'Custom' && preset != 'None' &&
                                 <>
                                 <View style={styles.presetConfigBox}>
                                     {categories.map((item, index) => (
@@ -562,7 +559,7 @@ export default function createGame() {
                                                             <Ionicons name="remove" size={16} color="#27253F" style={{opacity:0.3}} />
                                                         </Pressable>
                                                         <Text style={styles.slotText}>{item.slots}</Text>
-                                                        <Pressable 
+                                                        <Pressable
                                                             style={styles.stepButton}
                                                             onPress={() => addSlot(index)}
                                                             disabled>
@@ -639,7 +636,7 @@ export default function createGame() {
 
                 </View>
             </KeyboardAwareScrollView>
-            <Modal 
+            <Modal
                 visible={showSavePresetModal}
                 transparent
                 animationType="fade">
@@ -683,16 +680,16 @@ export default function createGame() {
                     <Text style={styles.buttonText}>Back</Text>
                 </View>
             </Pressable>
-            <Pressable 
+            <Pressable
                     style={[
                         styles.nextStepButton,
                         step === 3 && !canProceedFromStep3 && { opacity: 0.4 }
-                    ]} 
+                    ]}
                     onPress={() => {
                     if (step == 3) {
                         if (!canProceedFromStep3) return
                             router.push({
-                                pathname: "/reviewGame",
+                                pathname: "/createFlow/reviewGame",
                                 params: {
                                     gameTitle,
                                     type,
@@ -769,7 +766,7 @@ export const styles = StyleSheet.create({
         fontSize: 13,
         fontWeight: "500",
         color: 'dimgray',
-        marginTop: 5, 
+        marginTop: 5,
     },
     inputFieldDual: {
         flexDirection: "row",
@@ -921,9 +918,9 @@ export const styles = StyleSheet.create({
         paddingVertical:20,
         borderRadius:8
     },
-    savePresetModalButton:{ 
+    savePresetModalButton:{
         color: '#D81159',
-        fontWeight: '600' 
+        fontWeight: '600'
     },
     presetConfigBox:{
         marginTop:10,
