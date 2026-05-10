@@ -563,7 +563,7 @@ export default function createGame() {
                                                             style={styles.stepButton}
                                                             onPress={() => addSlot(index)}
                                                             disabled>
-                                                            <Ionicons name="add" size={16} color="#27253F style={{opacity:0.3}}" />
+                                                            <Ionicons name="add" size={16} color="#27253F" style={{opacity:0.3}} />
                                                         </Pressable>
                                                     </View>
                                                 </View>
@@ -924,7 +924,8 @@ export const styles = StyleSheet.create({
     },
     presetConfigBox:{
         marginTop:10,
-        marginHorizontal:4
+        marginHorizontal:4,
+        marginBottom:15
     },
     presetConfigRow:{
         flexDirection:'row',
