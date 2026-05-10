@@ -15,8 +15,8 @@ import {
     View
 } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
-import type { Category, SkillLevel } from "../../src/api/types";
-import { useParsedParams } from "../../src/utils/useParsedParams";
+import type { Category, SkillLevel } from "../src/api/types";
+import { useParsedParams } from "../src/utils/useParsedParams";
 
 
 export default function createGame() {
@@ -205,6 +205,9 @@ export default function createGame() {
                     </View>
                     </>
                 )}
+                <Pressable style={styles.closeButton} onPress={() => router.back()}>
+                    <Ionicons name="close" size={22} color="white" />
+                </Pressable>
             </Pressable>
             <View style={styles.layout}>
                     <View style={styles.stepCard}>
@@ -1003,6 +1006,14 @@ export const styles = StyleSheet.create({
     hintText: {
         color: 'gray',
         marginTop: 10,
+    },
+    closeButton: {
+        position: 'absolute',
+        top: 12,
+        right: 12,
+        backgroundColor: 'rgba(0,0,0,0.35)',
+        borderRadius: 20,
+        padding: 4,
     },
 }
 )

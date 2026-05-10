@@ -1,4 +1,4 @@
-import { Feather } from '@expo/vector-icons';
+import { Feather, Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from "expo-router";
 import {
     Image,
@@ -8,7 +8,7 @@ import {
     Text,
     View
 } from "react-native";
-import type { Category } from "../../src/api/types";
+import type { Category } from "../src/api/types";
 
 export default function reviewGame() {
     const router = useRouter()
@@ -141,7 +141,7 @@ export default function reviewGame() {
                     <Text style={styles.text}>{label}</Text>
                 </View>
                 <View style={styles.rightSide}>
-                    <Text style={[styles.text, {color:"black", flex: 1, textAlign: 'right'}]} numberOfLines={numberOfLines} ellipsizeMode="tail">{value? value : '-'}</Text>
+                    <Text style={[styles.text, {color:"black", flex: 1, textAlign: 'right', fontWeight: '500'}]} numberOfLines={numberOfLines} ellipsizeMode="tail">{value? value : '-'}</Text>
                 </View>
             </View>
         )
@@ -175,7 +175,12 @@ export default function reviewGame() {
     return (
         <View style={[{backgroundColor:'white'},{ flex: 1 }]}>
             <ScrollView contentContainerStyle={{ paddingBottom: 90 }}>
-            <Image source={{uri: params.image}} style = {styles.coverPhotoLayout}/>
+            <View style={{ position: 'relative' }}>
+                <Image source={{uri: params.image}} style = {styles.coverPhotoLayout}/>
+                <Pressable style={styles.closeButton} onPress={() => router.back()}>
+                    <Ionicons name="close" size={22} color="white" />
+                </Pressable>
+            </View>
             <View style={styles.layout}>
                 <View style={[styles.box, {marginTop:10}]}>
                     <View style={styles.sectionHeaderRow}>
@@ -242,23 +247,25 @@ export const styles = StyleSheet.create({
         marginBottom:15,
     },
     layout: {
-        marginHorizontal: 20,    },
+        marginHorizontal: 20,    
+    },
     box: {
         width:'100%',
         borderWidth: 1,
         borderColor:'silver',
         borderRadius:5,
         marginBottom:20,
-        padding:12,
+        padding:13,
     },
     title:{
         fontSize:15,
         fontWeight:'500',
+        color:'#27253F',
     },
     infoRow:{
         flexDirection:'row',
         alignItems:'center',
-        marginBottom:7
+        marginBottom:8
     },
     sectionHeaderRow:{
         flexDirection:'row',
@@ -266,8 +273,8 @@ export const styles = StyleSheet.create({
         marginBottom:12
     },
     text:{
-        fontSize:12.5,
-        fontWeight:'500',
+        fontSize:13,
+        fontWeight:'400',
         color:'gray',
     },
     leftSide: {
@@ -309,5 +316,13 @@ export const styles = StyleSheet.create({
         fontWeight:"700",
         marginHorizontal:12,
         alignSelf:'center'
+    },
+    closeButton: {
+        position: 'absolute',
+        top: 12,
+        right: 12,
+        backgroundColor: 'rgba(0,0,0,0.35)',
+        borderRadius: 20,
+        padding: 4,
     },
 })
