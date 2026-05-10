@@ -13,9 +13,9 @@ import {
     TextInput,
     View
 } from "react-native";
-import { listGames } from "../../../src/api/client";
-import type { GameResponse, SkillLevel } from "../../../src/api/types";
-import { formatDateFilter, formatGameDate, formatTime } from "../../../src/utils/format";
+import { listGames } from "../../src/api/client";
+import type { GameResponse, SkillLevel } from "../../src/api/types";
+import { formatDateFilter, formatGameDate, formatTime } from "../../src/utils/format";
 
 
 export default function Games() {
@@ -29,6 +29,7 @@ export default function Games() {
         city: "",
         level: "",
         gender: "",
+        type:"",
         datePreset: "",
         date: null,
     })
@@ -82,12 +83,21 @@ export default function Games() {
         }))
     }
 
+    const type =["drill","game"]
+    const selectType= (type:string) => {
+        setFilters(prev => ({
+            ...prev,
+            type: prev.type === type?"":type
+        }))
+    }
+
     const resetFilters =() => {
         setFilters({
             sport: "",
             city: "",
             level: "",
             gender: "",
+            type:"",
             datePreset: "",
             date: null,
         })
@@ -99,6 +109,7 @@ export default function Games() {
         const level = filters.level;
         const city = filters.city
         const gender = filters.gender
+        const type=filters.type
         const dateFilter = date
 
         const getFilterDate = (date:string) => {
@@ -138,19 +149,22 @@ export default function Games() {
             const gameLocation = (g.location ?? "").toLowerCase();
             const gameCity = (g.city ?? "").trim().toLowerCase()
             const gameGender = (g.gender ?? "").trim().toLowerCase()
+            const gameType=(g.type ?? "").trim().toLowerCase()
             const gameDayT = formatDateFilter(g.date)
             const gameOrganizer = (g.organizer.name ?? "").trim().toLowerCase()
 
             const matchesCity = !city || gameCity === city  //if city is empty string  then first condition is true
             const matchesLevel = !level || gameLevel === level;
             const matchesGender = !gender || gameGender === gender;
+            const matchesType = !type || gameType === type;
             const matchesQuery = !q || gameTitle.includes(q) || gameLocation.includes(q) || gameOrganizer.includes(q);
             const matchesDate = isMatchDate(gameDayT, filter)
-            return matchesLevel && matchesQuery && matchesCity && matchesGender && matchesDate
+            return matchesLevel && matchesQuery && matchesCity && matchesGender && matchesDate && matchesType
             });
-        }, [games, query, filters.level, filters.city,filters.gender, date]);
+        }, [games, query, filters.level, filters.city,filters.gender,filters.type, date]);
 
-    if (isLoading) {
+    
+        if (isLoading) {
         return (
             <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
                 <ActivityIndicator size="small" color="lightblue" />
@@ -264,39 +278,49 @@ export default function Games() {
                         <View style = {{flex:1}}>
                             <Pressable style={styles.filterBackdrop} onPress={() => setIsPanelOpen(false)}/>
                             <View style={styles.filterPanel}>
-                                <Text style={[styles.filterPanelTitle, {marginTop:2}]}>GENDER</Text>
-                                    <View style={styles.filterPanelRows}>
-                                        {gender.map(item => (
-                                            <Pressable key={item} onPress={() => selectGender(item)}>
-                                                <View style={[styles.filterPanelOptions, filters.gender === item && styles.filterPanelOptionsSelected]}>
-                                                    <Text style={styles.filterPanelOptionsText}>{item.toUpperCase()}</Text>
-                                                </View>
-                                            </Pressable>
-                                        ))}
-                                    </View>
-                                    <Text style={styles.filterPanelTitle}>SKILL LEVEL</Text>
-                                    <View style={styles.filterPanelRows}>
-                                        {skillLevels.map(item => (
-                                            <Pressable key={item} onPress={() => selectLevel(item)}>
-                                                <View style={[styles.filterPanelOptions, filters.level === item && styles.filterPanelOptionsSelected]}>
-                                                    <Text style={styles.filterPanelOptionsText}>{item.toUpperCase()}</Text>
-                                                </View>
-                                            </Pressable>
-                                        ))}
-                                    </View>
-                                    <Text style={styles.filterPanelTitle}>CITY</Text>
-                                    <View style={styles.filterPanelRows}>
-                                        {cities.map(item => (
-                                            <Pressable key={item} onPress={() => selectCity(item)}>
-                                                <View style={[styles.filterPanelOptions, filters.city === item && styles.filterPanelOptionsSelected]}>
-                                                    <Text style={styles.filterPanelOptionsText}>{item.toUpperCase()}</Text>
-                                                </View>
-                                            </Pressable>
-                                        ))}
-                                    </View>
-                                    <Pressable style={styles.filterPanelResetButton} onPress={resetFilters}>
-                                        <Text style={styles.filterPanelResetText}>RESET ALL</Text>
-                                    </Pressable>
+                                <Text style={[styles.filterPanelTitle, {marginTop:2}]}>SESSION TYPE</Text>
+                                <View style={styles.filterPanelRows}>
+                                    {type.map(item=> (
+                                        <Pressable key={item} onPress={() => selectType(item)}>
+                                            <View style={[styles.filterPanelOptions, filters.type === item && styles.filterPanelOptionsSelected]}>
+                                                <Text style={[styles.filterPanelOptionsText, filters.type === item && styles.filterPanelOptionsTextSelected]}>{item.toUpperCase()}</Text>
+                                            </View>
+                                        </Pressable>
+                                    ))}
+                                </View>
+                                <Text style={styles.filterPanelTitle}>GENDER</Text>
+                                <View style={styles.filterPanelRows}>
+                                    {gender.map(item => (
+                                        <Pressable key={item} onPress={() => selectGender(item)}>
+                                            <View style={[styles.filterPanelOptions, filters.gender === item && styles.filterPanelOptionsSelected]}>
+                                                <Text style={[styles.filterPanelOptionsText, filters.gender === item && styles.filterPanelOptionsTextSelected]}>{item.toUpperCase()}</Text>
+                                            </View>
+                                        </Pressable>
+                                    ))}
+                                </View>
+                                <Text style={styles.filterPanelTitle}>SKILL LEVEL</Text>
+                                <View style={styles.filterPanelRows}>
+                                    {skillLevels.map(item => (
+                                        <Pressable key={item} onPress={() => selectLevel(item)}>
+                                            <View style={[styles.filterPanelOptions, filters.level === item && styles.filterPanelOptionsSelected]}>
+                                                <Text style={[styles.filterPanelOptionsText, filters.level === item && styles.filterPanelOptionsTextSelected]}>{item.toUpperCase()}</Text>
+                                            </View>
+                                        </Pressable>
+                                    ))}
+                                </View>
+                                <Text style={styles.filterPanelTitle}>CITY</Text>
+                                <View style={styles.filterPanelRows}>
+                                    {cities.map(item => (
+                                        <Pressable key={item} onPress={() => selectCity(item)}>
+                                            <View style={[styles.filterPanelOptions, filters.city === item && styles.filterPanelOptionsSelected]}>
+                                                <Text style={[styles.filterPanelOptionsText, filters.city === item && styles.filterPanelOptionsTextSelected]}>{item.toUpperCase()}</Text>
+                                            </View>
+                                        </Pressable>
+                                    ))}
+                                </View>
+                                <Pressable style={styles.filterPanelResetButton} onPress={resetFilters}>
+                                    <Text style={styles.filterPanelResetText}>RESET ALL</Text>
+                                </Pressable>
                             </View>
                         </View>
                 </Modal>
@@ -403,14 +427,18 @@ export const styles = StyleSheet.create({
         alignItems: 'center',
     },
     filterPanelOptionsSelected:{
-        backgroundColor: '#f7b5cb',
-        borderColor:'#f7b5cb'
+        backgroundColor: '#D81159',
+        borderColor: '#D81159',
     },
     filterPanelOptionsText:{
         fontSize: 12,
         fontWeight: "400",
         color: '#27253F',
         textAlign: 'center',
+    },
+    filterPanelOptionsTextSelected:{
+        color: 'white',
+        fontWeight: '600',
     },
     filterPanelTitle:{
         fontSize:15,
@@ -426,8 +454,8 @@ export const styles = StyleSheet.create({
     },
     filterPanelResetText:{
         fontSize: 13,
-        color: '#D81159',
-        fontWeight: '500',
+        color: '#27253F',
+        fontWeight: '600',
     },
     filterPanelDropdown:{
         flexDirection: "row",

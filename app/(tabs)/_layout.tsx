@@ -37,6 +37,16 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="search"
+        options={{
+          title: 'Search',
+          tabBarIcon: ({ color }) => <Ionicons name="search" size={26} color={color} />,
+          tabBarButton: ({ style, children }) => (
+            <Pressable style={style} onPress={() => router.push('/search')}>{children}</Pressable>
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="explore"
         options={{
           title: 'Explore',

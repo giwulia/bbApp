@@ -12,7 +12,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, Link, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Image, Modal, Pressable, StyleSheet, Text, View, Dimensions } from 'react-native';
-import { formatGameDate, formatTime } from "../../../src/utils/format";
+import { formatGameDate, formatTime } from "../../src/utils/format";
 
 function DefaultAvatar({name}:{name:string}) {
     const parts = name.split(" ");
@@ -480,9 +480,6 @@ export const styles = StyleSheet.create({
         marginHorizontal:15,
         backgroundColor: "#D81159",
         shadowColor: "#D81159",
-        shadowOpacity: 0.3,
-        shadowRadius: 4,
-        elevation: 3,
         height:33
     },
     joinGameText:{
