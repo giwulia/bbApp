@@ -7,6 +7,7 @@ import {
     Image,
     Keyboard,
     Modal,
+    Platform,
     Pressable,
     StyleSheet,
     Text,
@@ -51,7 +52,7 @@ export default function createGame() {
         setStep(newStep);
     }, [params.step]);
     const [totalSpots, setTotalSpots] = useState(getNumber("totalSpots"))
-    const [preset, setPreset] = useState<string>('None')
+    const [preset, setPreset] = useState<string>(getString("preset") ?? 'None')
     const [showPresetDropdown, setShowPresetDropdown]=useState(false)
     const [presetName, setPresetName]= useState("")
     const [showSavePresetModal,setShowSavePresetModal] =useState(false)
@@ -67,7 +68,7 @@ export default function createGame() {
     const typeOptions=['Game','Drill']
     const levelOptions=['Beginner','Intermediate','Advanced','Competitive']
     const genderOptions=['Female','Male','Mixed']
-    const presetOptions=["None","Custom","5:1 (18)", "5:1 (12)"]
+    const presetOptions=["None", "Custom","5:1 (18)", "5:1 (12)"]
     const [presetOptionsList, setPresetOptionsList] = useState<string[]>(presetOptions)
 
     const presetOptionsConfig: Record<string, Category[]>={
@@ -84,7 +85,15 @@ export default function createGame() {
             {position:'Libero', slots:2},
             {position:'Opposite', slots:2},
             {position:'Middle', slots:2},   
-        ]}
+        ],
+        "Custom":[
+            {position:'Setter', slots:0},
+            {position:'Outside', slots:0},
+            {position:'Libero', slots:0},
+            {position:'Opposite', slots:0},
+            {position:'Middle', slots:0},   
+        ]
+    }
 
 
 
@@ -140,21 +149,43 @@ export default function createGame() {
         setPresetOptionsList(prev => [...prev, savedPreset])    
     }
 
+    const spotsSelected = categories.reduce((total, cat) => total + cat.slots, 0)
+    const totalSpotsVerified = spotsSelected == totalSpots
+
+    function VerifyTotalSpots({ totalSpotsSelected, totalSpots }: { totalSpotsSelected: number, totalSpots: number }) {
+        return(
+            <View style={{ alignItems: 'flex-end' }}>
+                <Text style={[styles.hintText, totalSpotsVerified? {color:'green'}: {color:'#EA580C'}]}>
+                    Positions selected {totalSpotsSelected}/{totalSpots}
+                </Text>
+            </View>
+        )
+    }
+
     // ----------------------
     // VALIDATION (STEP 3)
     // ----------------------
     const saveAsPreset =()=>setShowSavePresetModal(true)
-    const canProceedFromStep3 = 
-        preset == 'None' || 
-        (categories.length> 0 && categories.every(cat => 
-            cat.position.trim() !=='' &&
-            cat.slots>0
-        ))
-    const canSavePreset =
-        categories.length>1 &&
-        categories.every(cat =>
+    const fields = [
+        gameTitle,
+        type,
+        level,
+        location,
+        locationUrl,
+        price,
+        gender,
+        date,
+        time,
+        endTime,
+        totalSpots,
+    ]
+
+    const allFieldsFilled = fields.every(item => item != null && item !== '')
+    const canProceedFromStep3 = allFieldsFilled && (preset === 'None' || totalSpotsVerified)
+
+    const canSavePreset = categories.length>1 && categories.every(cat =>
             cat.position.trim() !== '' && cat.slots>0
-        )
+    )
 
 
     return (
@@ -191,7 +222,7 @@ export default function createGame() {
                     {step === 1 && (
                         <>
                             {/* GAME TITLE */}
-                            <Text style={styles.inputFieldTitle}>GAME TITLE</Text>
+                            <Text style={styles.inputFieldTitle}>GAME TITLE <Text style={styles.required}>*</Text></Text>
                             <View style={styles.inputFieldBar}>
                                 <TextInput
                                     style={[styles.inputFieldText, { flex: 1 }]}
@@ -203,7 +234,7 @@ export default function createGame() {
                             </View>
 
                             {/* GAME TYPE */}
-                            <Text style={styles.inputFieldTitle}>SESSION TYPE</Text>
+                            <Text style={styles.inputFieldTitle}>SESSION TYPE <Text style={styles.required}>*</Text></Text>
                             <Pressable style={styles.inputFieldBar} onPress={() => {Keyboard.dismiss(); setShowTypeDropdown(!showTypeDropdown)}}>
                                 <Text style={[styles.inputFieldText, { flex: 1, color: type ? "#27253F" : "silver" }]}>{type ?? 'Select type'}</Text>
                                 <Ionicons name={showTypeDropdown ? "chevron-up" : "chevron-down"} size={16} color="silver" />
@@ -227,7 +258,7 @@ export default function createGame() {
                             )}
 
                             {/* LEVEL */}
-                            <Text style={styles.inputFieldTitle}>LEVEL</Text>
+                            <Text style={styles.inputFieldTitle}>LEVEL <Text style={styles.required}>*</Text></Text>
                             <Pressable style={styles.inputFieldBar} onPress={() => {Keyboard.dismiss(); setShowLevelDropdown(!showLevelDropdown)}}>
                                 <Text style={[styles.inputFieldText, { flex: 1, color: level ? "#27253F" : "silver" }]}>{level ?? 'Select level'}</Text>
                                 <Ionicons name={showLevelDropdown ? "chevron-up" : "chevron-down"} size={16} color="silver" />
@@ -251,7 +282,7 @@ export default function createGame() {
                             )}
 
                             {/* GENDER */}
-                            <Text style={styles.inputFieldTitle}>GENDER</Text>
+                            <Text style={styles.inputFieldTitle}>GENDER <Text style={styles.required}>*</Text></Text>
                             <Pressable style={styles.inputFieldBar} onPress={() => {Keyboard.dismiss(); setShowGenderDropDown(!showGenderDropdown)}}>
                                 <Text style={[styles.inputFieldText, { flex: 1, color: gender ? "#27253F" : "silver" }]}>
                                     {gender ?? 'Select gender'}
@@ -277,7 +308,7 @@ export default function createGame() {
                             )}
 
                             {/* PRICE */}
-                            <Text style={styles.inputFieldTitle}>PRICE</Text>
+                            <Text style={styles.inputFieldTitle}>PRICE <Text style={styles.required}>*</Text></Text>
                             <View style={styles.inputFieldBar}>
                                 <TextInput
                                     style={[styles.inputFieldText, { flex: 1 }]}
@@ -305,7 +336,7 @@ export default function createGame() {
 
                     {step === 2 && (
                         <>
-                            <Text style={styles.inputFieldTitle}>DATE</Text>
+                            <Text style={styles.inputFieldTitle}>DATE <Text style={styles.required}>*</Text></Text>
                             <Pressable style={[styles.inputFieldBar, { flex: 1, marginRight: 12 }]} onPress={() => setShowDatePicker(!showDatePicker)}>
                                 <Text style={[styles.inputFieldText,{color: date ? "#27253F" :"silver"}]}>
                                     {date ? date.toLocaleDateString('en-GB') : 'DD/MM/YYYY'}
@@ -324,7 +355,7 @@ export default function createGame() {
                                 </View>
                             )}
                             {/* TIME */}
-                            <Text style={styles.inputFieldTitle}>START & END TIME</Text>
+                            <Text style={styles.inputFieldTitle}>START & END TIME <Text style={styles.required}>*</Text></Text>
                             <View style={styles.inputFieldDual}>
                                 <Pressable style={[styles.inputFieldBar, { flex: 1 }]} onPress={() => setShowTimePicker(!showTimePicker)}>
                                     <Text style={[styles.inputFieldText,{color: time ? "#27253F" :"silver"}]}>
@@ -351,8 +382,13 @@ export default function createGame() {
                                         value={time ?? new Date()}
                                         mode="time"
                                         display="spinner"
-                                        onChange={(_, selectedTime) => {
-                                            if (selectedTime) setTime(selectedTime)
+                                        onChange={(event, selectedTime) => {
+                                            if (Platform.OS === 'android') {
+                                                setShowTimePicker(false)
+                                                if (event.type === 'set' && selectedTime) setTime(selectedTime)
+                                            } else {
+                                                if (selectedTime) setTime(selectedTime)
+                                            }
                                         }}
                                     />
                                 </View>
@@ -371,8 +407,13 @@ export default function createGame() {
                                         value={endTime ?? new Date()}
                                         mode="time"
                                         display="spinner"
-                                        onChange={(_, selectedTime) => {
-                                            if (selectedTime) setEndTime(selectedTime)
+                                        onChange={(event, selectedTime) => {
+                                            if (Platform.OS === 'android') {
+                                                setShowEndTimePicker(false)
+                                                if (event.type === 'set' && selectedTime) setEndTime(selectedTime)
+                                            } else {
+                                                if (selectedTime) setEndTime(selectedTime)
+                                            }
                                         }}
                                     />
                                 </View>
@@ -382,7 +423,7 @@ export default function createGame() {
                             </Pressable> */}
 
                             {/* LOCATION */}
-                            <Text style={styles.inputFieldTitle}>LOCATION</Text>
+                            <Text style={styles.inputFieldTitle}>LOCATION <Text style={styles.required}>*</Text></Text>
                             <View style={styles.inputFieldBar}>
                                 <TextInput
                                     style={[styles.inputFieldText, { flex: 1 }]}
@@ -394,7 +435,7 @@ export default function createGame() {
                             </View>
 
                             {/* LOCATION URL */}
-                            <Text style={styles.inputFieldTitle}>GOOGLE MAPS URL</Text>
+                            <Text style={styles.inputFieldTitle}>GOOGLE MAPS URL <Text style={styles.required}>*</Text></Text>
                             <View style={styles.inputFieldBar}>
                                 <TextInput
                                     style={[styles.inputFieldText, { flex: 1 }]}
@@ -412,7 +453,7 @@ export default function createGame() {
                     {step === 3 && (
                         <>
                             {/* TOTAL SPOTS */}
-                            <Text style={styles.inputFieldTitle}>PLAYERS</Text>
+                            <Text style={styles.inputFieldTitle}>PLAYERS <Text style={styles.required}>*</Text></Text>
                             <View style={styles.inputFieldBar}>
                                 <TextInput
                                     style={[styles.inputFieldText, { flex: 1 }]}
@@ -425,7 +466,7 @@ export default function createGame() {
                             </View>
 
                             {/*PRESET */}
-                            <Text style= {styles.inputFieldTitle}>PRESET</Text>
+                            <Text style={styles.inputFieldTitle}>PRESET <Text style={styles.required}>*</Text></Text>
                             <Pressable style={styles.inputFieldBar} onPress={() => setShowPresetDropdown(!showPresetDropdown)}>
                                 <Text style={[styles.inputFieldText, { flex: 1 }]}>{preset}</Text>
                                 <Ionicons name={showPresetDropdown ? "chevron-up" : "chevron-down"} size={16} color="silver" />
@@ -441,8 +482,6 @@ export default function createGame() {
                                                 setShowPresetDropdown(false)
                                                 if (option == 'None'){
                                                     setCategories([])
-                                                } else if (option == 'Custom') {
-                                                    setCategories([{position:'', slots:0}])
                                                 } else {
                                                     const presetData = presetOptionsConfig[option]
                                                     const copiedData = presetData.map(item => ({
@@ -463,6 +502,89 @@ export default function createGame() {
                             )}
 
                             {/*CUSTOM*/}
+                            {preset=='Custom' &&
+                                <>
+                                <View style={styles.presetConfigBox}>
+                                    {categories.map((item, index) => (
+                                        <View key={index}>
+                                            {index > 0 && <View style={styles.presetDivider} />}
+                                            <View style={styles.presetConfigRow}>
+                                                <View style={styles.leftSide}>
+                                                    <Text style={styles.presetPosition}>{item.position}</Text>
+                                                </View>
+                                                <View style={styles.rightSide}>
+                                                    <Ionicons name="person" size={16} color="gray" />
+                                                    <View style={styles.presetNumberBox}>
+                                                        <Pressable
+                                                            style={styles.stepButton}
+                                                            onPress={() => removeSlot(index)}
+                                                            disabled={item.slots === 0}
+                                                        >
+                                                            <Ionicons name="remove" size={16} color="#27253F" style={{ opacity: item.slots === 0 ? 0.3 : 1 }} />
+                                                        </Pressable>
+                                                        <Text style={styles.slotText}>{item.slots}</Text>
+                                                        <Pressable style={styles.stepButton} onPress={() => addSlot(index)}>
+                                                            <Ionicons name="add" size={16} color="#27253F" />
+                                                        </Pressable>
+                                                    </View>
+                                                </View>
+                                            </View>
+                                        </View>
+                                    ))}
+                                </View>
+                                <VerifyTotalSpots totalSpotsSelected={spotsSelected ?? 0} totalSpots={totalSpots ?? 0} />
+                                </>
+                            }
+
+
+                            {/* PRESET CONFIG */}
+                            {preset !== 'Custom' && preset != 'None' && 
+                                <>
+                                <View style={styles.presetConfigBox}>
+                                    {categories.map((item, index) => (
+                                        <View key={index}>
+                                            {index > 0 && <View style={styles.presetDivider} />}
+                                            <View style={styles.presetConfigRow}>
+                                                <View style={styles.leftSide}>
+                                                    <Text style={styles.presetPosition}>{item.position}</Text>
+                                                </View>
+                                                <View style={styles.rightSide}>
+                                                    <Ionicons name="person" size={16} color="gray" />
+                                                    <View style={styles.presetNumberBox}>
+                                                        <Pressable
+                                                            style={styles.stepButton}
+                                                            onPress={() => removeSlot(index)}
+                                                            disabled
+                                                        >
+                                                            <Ionicons name="remove" size={16} color="#27253F" style={{opacity:0.3}} />
+                                                        </Pressable>
+                                                        <Text style={styles.slotText}>{item.slots}</Text>
+                                                        <Pressable 
+                                                            style={styles.stepButton}
+                                                            onPress={() => addSlot(index)}
+                                                            disabled>
+                                                            <Ionicons name="add" size={16} color="#27253F style={{opacity:0.3}}" />
+                                                        </Pressable>
+                                                    </View>
+                                                </View>
+                                            </View>
+                                        </View>
+                                    ))}
+                                </View>
+                                <VerifyTotalSpots totalSpotsSelected={spotsSelected ?? 0} totalSpots={totalSpots ?? 0} />
+                                </>
+                            }
+
+                            {/*NONE*/}
+                            {preset == 'None' &&
+                                <>
+                                    <Text style={styles.hintText}>
+                                        No positions defined for this game
+                                    </Text>
+                                </>
+                            }
+
+                            {/* CUSTOM - commented out
                             {preset=='Custom' &&
                                 <>
                                 {categories.map((item,index) =>(
@@ -502,63 +624,13 @@ export default function createGame() {
                                                 <Pressable style={styles.addCategoryButton} onPress={addCantegoryBox}>
                                                     <Text style={styles.buttonText}>ADD CATEGORY</Text>
                                                 </Pressable>
-                                                {/* {canSavePreset && (
-                                                    <Pressable style={styles.savePresetButton} onPress={saveAsPreset}>
-                                                        <Text style={styles.savePresetText}>Save settings as preset →</Text>
-                                                    </Pressable>
-                                                )} */}
                                             </>
                                         )}
                                     </View>
                                     ))}
                                 </>
                             }
-
-                            {/* PRESET CONFIG */}
-                            {preset !== 'Custom' && preset != 'None'&& 
-                            <>
-                            <View style = {styles.presetConfigBox}>
-                                {categories.map((item, index) => (
-                                    <View key={index} style={styles.presetConfigRow}>
-                                        {/* LEFT SIDE */}
-                                        <View style={styles.leftSide}>
-                                            <Text style={styles.presetPosition}>{item.position}</Text>
-                                        </View>
-
-                                        {/* RIGHT SIDE (icon + box grouped) */}
-                                        <View style={styles.rightSide}>
-                                            <Ionicons name="person" size={16} color="gray" />
-
-                                            <View style={styles.presetNumberBox}>
-                                                <Pressable
-                                                    style={styles.stepButton}
-                                                    onPress={() => removeSlot(index)}
-                                                    disabled={item.slots === 0}
-                                                >
-                                                    <Text style={{ opacity: item.slots === 0 ? 0.3 : 1 }}>-</Text>
-                                                </Pressable>
-
-                                                <Text style={styles.slotText}>{item.slots}</Text>
-
-                                                <Pressable style={styles.stepButton} onPress={() => addSlot(index)}>
-                                                    <Text>+</Text>
-                                                </Pressable>
-                                            </View>
-                                        </View>
-                                    </View>
-                                ) )}
-                            </View>
-                            </>
-                            }
-
-                            {/*NONE*/}
-                            {preset == 'None' &&
-                            <>
-                                <Text style={{ color: 'gray', marginTop: 10 }}>
-                                    No positions defined for this game
-                                </Text>
-                            </>
-                            }
+                            */}
                         </>
                     )}
 
@@ -663,6 +735,9 @@ export const styles = StyleSheet.create({
     },
     layout: {
         marginHorizontal: 20,
+    },
+    required: {
+        color: '#D81159',
     },
     createGameTitle: {
         fontSize: 28,
@@ -848,12 +923,12 @@ export const styles = StyleSheet.create({
         fontWeight: '600' 
     },
     presetConfigBox:{
-        marginTop:20,
+        marginTop:10,
         marginHorizontal:4
     },
     presetConfigRow:{
         flexDirection:'row',
-        marginBottom:20,
+        marginBottom:10,
         alignItems:'center'
     },
     leftSide: {
@@ -879,9 +954,14 @@ export const styles = StyleSheet.create({
         backgroundColor: '#f7f7f7',
     },
     presetPosition:{
-        fontSize:16,
-        fontWeight:500,
-        color:'black'
+        fontSize: 16,
+        fontWeight: '500',
+        color: 'black'
+    },
+    presetDivider: {
+        height: 1,
+        backgroundColor: '#eee',
+        marginBottom: 10,
     },
     stepButton: {
         flex: 1,
@@ -918,6 +998,10 @@ export const styles = StyleSheet.create({
         fontSize: 14,
         fontWeight: '600',
         color: '#D81159',
+    },
+    hintText: {
+        color: 'gray',
+        marginTop: 10,
     },
 }
 )

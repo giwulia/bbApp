@@ -1,19 +1,14 @@
-import { 
+import { Feather } from '@expo/vector-icons';
+import { useLocalSearchParams, useRouter } from "expo-router";
+import {
+    Image,
     Pressable,
     ScrollView,
     StyleSheet,
     Text,
-    TextInput,
-    View,
-    Modal,
-    KeyboardAvoidingView,
-    Image
+    View
 } from "react-native";
-import type { SkillLevel, Category } from "../../src/api/types";
-import { useRef, useState } from "react"
-import * as ImagePicker from 'expo-image-picker'
-import { Octicons, Ionicons,Feather } from '@expo/vector-icons'
-import { useRouter, Link, useLocalSearchParams} from "expo-router";
+import type { Category } from "../../src/api/types";
 
 export default function reviewGame() {
     const router = useRouter()
@@ -146,20 +141,35 @@ export default function reviewGame() {
                     <Text style={styles.text}>{label}</Text>
                 </View>
                 <View style={styles.rightSide}>
-                    <Text style={[styles.text, {color:"black", flex: 1, textAlign: 'right'}]} numberOfLines={numberOfLines} ellipsizeMode="tail">{value}</Text>
+                    <Text style={[styles.text, {color:"black", flex: 1, textAlign: 'right'}]} numberOfLines={numberOfLines} ellipsizeMode="tail">{value? value : '-'}</Text>
                 </View>
             </View>
         )
     }
 
     const goBackEdit = (step: number) => {
-    router.push({
-        pathname: "/createGame",
-        params: {
-            step: String(step)
-        }
-    })
-}
+        router.push({
+            pathname: "/createGame",
+            params: {
+                step: String(step),
+                gameTitle: params.gameTitle,
+                type: params.type,
+                level: params.level,
+                price: params.price,
+                image: params.image,
+                gender: params.gender,
+                description: params.description,
+                date: params.date,
+                time: params.time,
+                endTime: params.endTime,
+                location: params.location,
+                locationUrl: params.locationUrl,
+                totalSpots: params.totalSpots,
+                preset: params.preset,
+                categories: params.categories,
+            }
+        })
+    }
 
 
     return (
@@ -167,12 +177,8 @@ export default function reviewGame() {
             <ScrollView contentContainerStyle={{ paddingBottom: 90 }}>
             <Image source={{uri: params.image}} style = {styles.coverPhotoLayout}/>
             <View style={styles.layout}>
-                <Pressable style={styles.buttonContent} onPress={()=> router.back()}>
-                    <Ionicons name="arrow-back" size={16} color="#D81159" />
-                    <Text style={styles.backButton}>BACK</Text>
-                </Pressable>
-                <View style={styles.box}>
-                    <View style={[styles.infoRow, {marginBottom:12}]}>
+                <View style={[styles.box, {marginTop:10}]}>
+                    <View style={styles.sectionHeaderRow}>
                         <View style={styles.leftSide}>
                             <Text style={styles.title}>Details</Text>
                         </View>
@@ -187,7 +193,7 @@ export default function reviewGame() {
                     ))}
                 </View>
                 <View style={styles.box}>
-                    <View style={[styles.infoRow, {marginBottom:12}]}>
+                    <View style={styles.sectionHeaderRow}>
                         <View style={styles.leftSide}>
                             <Text style={styles.title}>Date & Location</Text>
                         </View>
@@ -202,7 +208,7 @@ export default function reviewGame() {
                         ))}
                 </View>
                 <View style={styles.box}>
-                    <View style={[styles.infoRow, {marginBottom:12}]}>
+                    <View style={styles.sectionHeaderRow}>
                         <View style={styles.leftSide}>
                             <Text style={styles.title}>Team Sheet</Text>
                         </View>
@@ -233,18 +239,17 @@ export const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         backgroundColor: 'rgb(117, 117, 118)',
-        marginBottom:15
+        marginBottom:15,
     },
     layout: {
-        marginHorizontal: 20,
-    },
+        marginHorizontal: 20,    },
     box: {
         width:'100%',
         borderWidth: 1,
         borderColor:'silver',
         borderRadius:5,
         marginBottom:20,
-        padding:12
+        padding:12,
     },
     title:{
         fontSize:15,
@@ -254,6 +259,11 @@ export const styles = StyleSheet.create({
         flexDirection:'row',
         alignItems:'center',
         marginBottom:7
+    },
+    sectionHeaderRow:{
+        flexDirection:'row',
+        alignItems:'center',
+        marginBottom:12
     },
     text:{
         fontSize:12.5,
