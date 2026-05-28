@@ -8,6 +8,17 @@ export type TransactionType = "deposit" | "withdrawal" | "game_fee" | "refund" |
 
 export type PositionSlots = Partial<Record<PlayerPositions, number>> | null;
 
+export type User = {
+    id: string;
+    name: string; 
+    username:string; 
+    main_role: PlayerPositions | null; 
+    off_role: PlayerPositions | null; 
+    skill_level: SkillLevel;
+    gender: PlayerGender;
+    image:string | null
+}
+
 export type Organizer = {
     id:string;
     name:string;
@@ -20,8 +31,8 @@ export type GameResponse = {
     organizer: Organizer;
 
     title: string;
-    description: string;
-    img: string;
+    description: string | null;
+    img: string | null;
     type: GameType;
     level_required: SkillLevel;
 
@@ -101,7 +112,12 @@ export type CreateGameBody = {
     reserved_spots: number;
     price_per_spot: number;
 
-    position_slots: PositionSlots,
-    template_id: null,
-    teams: null
+    position_slots: PositionSlots ,
+    template_id: string | null,
     };
+
+
+export type Category = {
+    position: string;
+    slots: number;
+};

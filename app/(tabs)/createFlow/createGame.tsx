@@ -68,30 +68,16 @@ export default function createGame() {
     const typeOptions=['Game','Drill']
     const levelOptions=['Beginner','Intermediate','Advanced','Competitive']
     const genderOptions=['Female','Male','Mixed']
-    const presetOptions=["None", "Custom","5:1 (18)", "5:1 (12)"]
+    const presetOptions=["None","5:1"]
     const [presetOptionsList, setPresetOptionsList] = useState<string[]>(presetOptions)
 
     const presetOptionsConfig: Record<string, Category[]>={
-        "5:1 (18)": [
-            {position:'Setter', slots:3},
-            {position:'Outside', slots:6},
-            {position:'Libero', slots:3},
-            {position:'Opposite', slots:3},
-            {position:'Middle', slots:3},
-        ],
-        "5:1 (12)":[
+        "5:1":[
             {position:'Setter', slots:2},
             {position:'Outside', slots:4},
             {position:'Libero', slots:2},
             {position:'Opposite', slots:2},
             {position:'Middle', slots:2},
-        ],
-        "Custom":[
-            {position:'Setter', slots:0},
-            {position:'Outside', slots:0},
-            {position:'Libero', slots:0},
-            {position:'Opposite', slots:0},
-            {position:'Middle', slots:0},
         ]
     }
 
@@ -190,25 +176,27 @@ export default function createGame() {
 
     return (
         <View style={[{backgroundColor:'white'},{ flex: 1 }]}>
-            <Pressable style={styles.coverPhotoLayout} onPress={uploadImage}>
-                {image ? (
-                    <Image
-                        source={{ uri: image }}
-                        style={{ width: "100%", height: "100%" }}
-                        resizeMode="cover"
-                    />
-                ) : (
-                    <>
-                    <Text style={[styles.inputFieldTitle, { color: 'white' }]}>TAP TO UPLOAD COVER PHOTO</Text>
-                        <View style={{ position: 'absolute', bottom: 10, left: 20 }}>
-                        <Text style={{ color: 'white', fontSize: 22, fontWeight: '500' }}>CREATE GAME</Text>
-                    </View>
-                    </>
-                )}
-                <Pressable style={styles.closeButton} onPress={() => router.back()}>
+            <View style={{ position: 'relative' }}>
+                <Pressable style={styles.coverPhotoLayout} onPress={uploadImage}>
+                    {image ? (
+                        <Image
+                            source={{ uri: image }}
+                            style={{ width: "100%", height: "100%" }}
+                            resizeMode="cover"
+                        />
+                    ) : (
+                        <>
+                            <Text style={[styles.inputFieldTitle, { color: 'white' }]}>TAP TO UPLOAD COVER PHOTO</Text>
+                            <View style={{ position: 'absolute', bottom: 10, left: 20 }}>
+                                <Text style={{ color: 'white', fontSize: 22, fontWeight: '500' }}>CREATE GAME</Text>
+                            </View>
+                        </>
+                    )}
+                </Pressable>
+                <Pressable style={styles.closeButton} onPress={() => router.push('/profile')}>
                     <Ionicons name="close" size={22} color="white" />
                 </Pressable>
-            </Pressable>
+            </View>
             <View style={styles.layout}>
                     <View style={styles.stepCard}>
                         {steps.map((item,index) =>(
@@ -502,7 +490,7 @@ export default function createGame() {
                             )}
 
                             {/*CUSTOM*/}
-                            {preset=='Custom' &&
+                            {preset!='None' &&
                                 <>
                                 <View style={styles.presetConfigBox}>
                                     {categories.map((item, index) => (
@@ -525,45 +513,6 @@ export default function createGame() {
                                                         <Text style={styles.slotText}>{item.slots}</Text>
                                                         <Pressable style={styles.stepButton} onPress={() => addSlot(index)}>
                                                             <Ionicons name="add" size={16} color="#27253F" />
-                                                        </Pressable>
-                                                    </View>
-                                                </View>
-                                            </View>
-                                        </View>
-                                    ))}
-                                </View>
-                                <VerifyTotalSpots totalSpotsSelected={spotsSelected ?? 0} totalSpots={totalSpots ?? 0} />
-                                </>
-                            }
-
-
-                            {/* PRESET CONFIG */}
-                            {preset !== 'Custom' && preset != 'None' &&
-                                <>
-                                <View style={styles.presetConfigBox}>
-                                    {categories.map((item, index) => (
-                                        <View key={index}>
-                                            {index > 0 && <View style={styles.presetDivider} />}
-                                            <View style={styles.presetConfigRow}>
-                                                <View style={styles.leftSide}>
-                                                    <Text style={styles.presetPosition}>{item.position}</Text>
-                                                </View>
-                                                <View style={styles.rightSide}>
-                                                    <Ionicons name="person" size={16} color="gray" />
-                                                    <View style={styles.presetNumberBox}>
-                                                        <Pressable
-                                                            style={styles.stepButton}
-                                                            onPress={() => removeSlot(index)}
-                                                            disabled
-                                                        >
-                                                            <Ionicons name="remove" size={16} color="#27253F" style={{opacity:0.3}} />
-                                                        </Pressable>
-                                                        <Text style={styles.slotText}>{item.slots}</Text>
-                                                        <Pressable
-                                                            style={styles.stepButton}
-                                                            onPress={() => addSlot(index)}
-                                                            disabled>
-                                                            <Ionicons name="add" size={16} color="#27253F" style={{opacity:0.3}} />
                                                         </Pressable>
                                                     </View>
                                                 </View>
@@ -1006,7 +955,7 @@ export const styles = StyleSheet.create({
     },
     closeButton: {
         position: 'absolute',
-        top: 12,
+        top: 52,
         right: 12,
         backgroundColor: 'rgba(0,0,0,0.35)',
         borderRadius: 20,

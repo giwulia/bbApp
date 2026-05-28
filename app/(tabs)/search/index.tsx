@@ -1,21 +1,23 @@
-import { Feather, Ionicons} from "@expo/vector-icons";
-import { Search, Filter, Settings2} from 'lucide-react-native'
-import { useRouter, Link} from "expo-router";
+import { Feather, Ionicons } from "@expo/vector-icons";
+import { Settings2 } from 'lucide-react-native'
+import { useRouter } from "expo-router";
+import GameCard from "@/components/GameCard";
 import { useEffect, useMemo, useState } from "react";
 import {
     ActivityIndicator,
     FlatList,
-    Image,
     Modal,
+    Platform,
     Pressable,
     StyleSheet,
     Text,
     TextInput,
     View
 } from "react-native";
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { listGames } from "../../../src/api/client";
 import type { GameResponse, SkillLevel } from "../../../src/api/types";
-import { formatDateFilter, formatGameDate, formatTime } from "../../../src/utils/format";
+import { formatDateFilter } from "../../../src/utils/format";
 
 
 export default function Games() {
@@ -34,6 +36,8 @@ export default function Games() {
         date: null,
     })
     const [date, setDate] = useState("");
+    const [calendarDate, setCalendarDate] = useState<Date | null>(null);
+    const [showCalendar, setShowCalendar] = useState(false);
     const router = useRouter();
 
     //Loading Games
@@ -55,9 +59,18 @@ export default function Games() {
         setIsPanelOpen(true)
     }
 
-    const selectDate =(date:string) => {
-        setDate(date)
+    const selectDate = (date: string) => {
+        setDate(date);
+        setCalendarDate(null);
     }
+
+    const onCalendarChange = (_: any, selected?: Date) => {
+        if (Platform.OS === 'android') setShowCalendar(false);
+        if (selected) {
+            setCalendarDate(selected);
+            setDate('');
+        }
+    };
 
     const cities = ["London", "Manchester", "Brighton", "Newcastle", "Birmingham"]
     const selectCity = (city:string) => {
@@ -91,7 +104,7 @@ export default function Games() {
         }))
     }
 
-    const resetFilters =() => {
+    const resetFilters = () => {
         setFilters({
             sport: "",
             city: "",
@@ -100,8 +113,9 @@ export default function Games() {
             type:"",
             datePreset: "",
             date: null,
-        })
-        setDate("")
+        });
+        setDate("");
+        setCalendarDate(null);
     }
 
     const filteredGames = useMemo(() => {
@@ -111,6 +125,7 @@ export default function Games() {
         const gender = filters.gender
         const type=filters.type
         const dateFilter = date
+        const specificDate = calendarDate ? calendarDate.toISOString().split('T')[0] : null;
 
         const getFilterDate = (date:string) => {
             const now = new Date();
@@ -125,8 +140,6 @@ export default function Games() {
             const endOfWeek = new Date(now);
             endOfWeek.setDate(endOfWeek.getDate() + 6);
             const end = endOfWeek.setHours(23, 59, 59, 999)
-            const start = today;
-
             if (date === "Today") return {type: "single" as const, value:today}
             if (date === "Tomorrow") return {type: "single" as const, value:tomorrow}
             if (date === "This Week") return  {type: "range" as const, start: today, end };
@@ -158,7 +171,7 @@ export default function Games() {
             const matchesGender = !gender || gameGender === gender;
             const matchesType = !type || gameType === type;
             const matchesQuery = !q || gameTitle.includes(q) || gameLocation.includes(q) || gameOrganizer.includes(q);
-            const matchesDate = isMatchDate(gameDayT, filter)
+            const matchesDate = specificDate ? g.date === specificDate : isMatchDate(gameDayT, filter);
             return matchesLevel && matchesQuery && matchesCity && matchesGender && matchesDate && matchesType
             });
         }, [games, query, filters.level, filters.city,filters.gender,filters.type, date]);
@@ -192,7 +205,7 @@ export default function Games() {
                     <Settings2 size={15} color="white"/>
                 </Pressable>
             </View>
-            {(filters.city || filters.level || filters.gender) && (
+            {(filters.city || filters.level || filters.gender || calendarDate) && (
                 <View style={styles.activeFiltersRow}>
                     {filters.city && (
                          <Pressable style={styles.activeFiltersBox} onPress={() => selectCity(filters.city)}>
@@ -209,9 +222,16 @@ export default function Games() {
                             <Text style={styles.activeFilterText}>{filters.gender.toUpperCase()}  ✕</Text>
                         </Pressable>
                     )}
+                    {calendarDate && (
+                        <Pressable style={styles.activeFiltersBox} onPress={() => setCalendarDate(null)}>
+                            <Text style={styles.activeFilterText}>
+                                {calendarDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }).toUpperCase()}  ✕
+                            </Text>
+                        </Pressable>
+                    )}
                 </View>
             )}
-            <View style = {styles.filterDatesRow}>
+            <View style={styles.filterDatesRow}>
                 <Pressable onPress={()=> selectDate("Anytime")} style={[styles.filterDateButton, date ==="Anytime" && styles.filterSelectedDateButton]}>
                     <Text style={styles.filterDateText}>Anytime</Text>
                 </Pressable>
@@ -224,48 +244,53 @@ export default function Games() {
                 <Pressable onPress={()=> selectDate("This Week")} style={[styles.filterDateButton, date ==="This Week" && styles.filterSelectedDateButton]}>
                     <Text style={styles.filterDateText}>This Week</Text>
                 </Pressable>
+                <Pressable onPress={() => setShowCalendar(true)} style={[styles.filterDateButton, !!calendarDate && styles.filterSelectedDateButton]}>
+                    <Ionicons name="calendar-outline" size={15} color={calendarDate ? '#D81159' : '#27253F'} />
+                </Pressable>
             </View>
+
+            {/* iOS calendar bottom sheet */}
+            {Platform.OS === 'ios' && (
+                <Modal visible={showCalendar} transparent animationType="slide" onRequestClose={() => setShowCalendar(false)}>
+                    <Pressable style={styles.calendarBackdrop} onPress={() => setShowCalendar(false)} />
+                    <View style={styles.calendarSheet}>
+                        <View style={styles.calendarSheetHeader}>
+                            <Text style={styles.calendarSheetTitle}>Pick a date</Text>
+                            <Pressable onPress={() => setShowCalendar(false)}>
+                                <Text style={styles.calendarDone}>Done</Text>
+                            </Pressable>
+                        </View>
+                        <DateTimePicker
+                            value={calendarDate ?? new Date()}
+                            mode="date"
+                            display="inline"
+                            onChange={onCalendarChange}
+                            minimumDate={new Date()}
+                            accentColor="#D81159"
+                            style={{ alignSelf: 'center' }}
+                        />
+                    </View>
+                </Modal>
+            )}
+
+            {/* Android native dialog */}
+            {Platform.OS === 'android' && showCalendar && (
+                <DateTimePicker
+                    value={calendarDate ?? new Date()}
+                    mode="date"
+                    display="default"
+                    onChange={onCalendarChange}
+                    minimumDate={new Date()}
+                />
+            )}
             <FlatList
                 data={filteredGames}
                 keyExtractor={(item) => item.id}
                 renderItem={({ item }) => (
-                    <View style={styles.gameCard}>
-                        <Pressable
-                            onPress={() =>
-                                router.push({
-                                    pathname: "/search/[id]",
-                                    params: { id: item.id },
-                                })
-                        }
-                        >
-                            <Image source={{ uri: item.img }} style={styles.gameImage} onLoadEnd={()=> setIsLoading(false)}/>
-                                <View style = {styles.gameInfoRow}>
-                                    <Text style={styles.gameHost}>{item.organizer.name} I</Text>
-                                    <Text style={[styles.gameLevel]}>{item.level_required.toUpperCase()}</Text>
-                                </View>
-                                <Text style={styles.gameTitle}>{item.title}</Text>
-                                <View style={styles.gameDetailsRow}>
-                                    <View style ={styles.gameInfoRow}>
-                                        <Ionicons name="calendar-outline" size ={14} color ="gray"/>
-                                        <Text style={styles.gameInfo}>{formatGameDate(item.date)}</Text>
-                                    </View>
-                                    <View style ={styles.gameInfoRow}>
-                                        <Ionicons name="location" size ={14} color ="gray"/>
-                                        <Text style={styles.gameInfo}>{item.location}</Text>
-                                    </View>
-                                </View>
-                                <View style={styles.gameDetailsRow}>
-                                    <View style ={styles.gameInfoRow}>
-                                        <Ionicons name="time" size ={14} color ="gray"/>
-                                        <Text style={styles.gameInfo}>{`${formatTime(item.start_time)}-${formatTime(item.end_time)}`}</Text>
-                                    </View>
-                                    <View style ={styles.gameInfoRow}>
-                                        <Ionicons name="person" size ={14} color ="gray"/>
-                                        <Text style={styles.gameInfo}>{`${item.reserved_spots}/${item.total_spots}`}</Text>
-                                    </View>
-                                </View>
-                            </Pressable>
-                    </View>
+                    <GameCard
+                        item={item}
+                        onPress={() => router.push({ pathname: "/search/[id]", params: { id: item.id } })}
+                    />
                 )}
                 onRefresh ={loadGames}
                 refreshing ={isLoading}
@@ -456,6 +481,33 @@ export const styles = StyleSheet.create({
         fontSize: 13,
         color: '#27253F',
         fontWeight: '600',
+    },
+    calendarBackdrop: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.35)',
+    },
+    calendarSheet: {
+        backgroundColor: 'white',
+        borderTopLeftRadius: 20,
+        borderTopRightRadius: 20,
+        paddingHorizontal: 16,
+        paddingBottom: 32,
+    },
+    calendarSheetHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingVertical: 16,
+    },
+    calendarSheetTitle: {
+        fontSize: 15,
+        fontWeight: '600',
+        color: '#27253F',
+    },
+    calendarDone: {
+        fontSize: 15,
+        fontWeight: '600',
+        color: '#D81159',
     },
     filterPanelDropdown:{
         flexDirection: "row",

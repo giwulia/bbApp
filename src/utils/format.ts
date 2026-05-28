@@ -32,3 +32,9 @@ export function formatDateFilter(dateString:string) {
 
     return date
 }
+
+export const getParam = (param:string | string[] | undefined) =>
+    {
+    if (!param) return undefined;
+    return Array.isArray(param) ? param[0] : param;
+};

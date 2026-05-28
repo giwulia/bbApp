@@ -1,5 +1,5 @@
-import type { CreateGameBody, GamesListResponse, GameResponse, ListGamesQuery } from "./types";
-import { mockGetGames, mockCreateGame, mockGetGameById } from "./mock";
+import type { CreateGameBody, GamesListResponse, GameResponse, ListGamesQuery, User } from "./types";
+import { mockGetGames, mockCreateGame, mockGetGameById, mockGetUserbyId, mockGetUserGames, mockUpdateUser, mockChangePassword } from "./mock";
 
 export function listGames(query?: ListGamesQuery):Promise<GamesListResponse> {
     return mockGetGames(query)
@@ -20,4 +20,20 @@ export async function joinGame(gameId: string, position?: string, bypass_payment
         signup_id: "uuid",
         checkourt_url: "https://checkout.stripe.com/c/pay/cs_test_..."
     }
+}
+
+export function getUser( userId: string): Promise<User | null> {
+    return mockGetUserbyId(userId)
+}
+
+export function getUserGames(status: 'upcoming' | 'past'): Promise<GameResponse[]> {
+    return mockGetUserGames(status)
+}
+
+export function updateUser(fields: Partial<Omit<User, 'id'>>): Promise<User> {
+    return mockUpdateUser(fields)
+}
+
+export function changePassword(currentPassword: string, newPassword: string): Promise<void> {
+    return mockChangePassword(currentPassword, newPassword)
 }

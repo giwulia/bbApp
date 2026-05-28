@@ -1,283 +1,259 @@
-import { 
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    View,
-    Modal,
-    KeyboardAvoidingView,
-    Platform,
-    Image
-} from "react-native";
-import { useState } from "react"
-import { Link, useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-
-
+import { useState } from "react";
+import { Image, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { useLocalSearchParams, useRouter } from "expo-router";
 
 export default function CheckoutScreen() {
-    const [isProcessing, setIsProcessing] = useState(false);
     const [promoCode, setPromoCode] = useState('');
-    const [cardHolderName, setCardHolderName] =useState('')
-    const [cardNumber, setCardNumber] = useState('')
-    const [expiryDate, setExpiryDate] = useState('')
-    const [cvv, setCvv] = useState('')
+    const [cardHolderName, setCardHolderName] = useState('');
+    const [cardNumber, setCardNumber] = useState('');
+    const [expiryDate, setExpiryDate] = useState('');
+    const [cvv, setCvv] = useState('');
     const router = useRouter();
 
-
-    const { gameId, gameTitle, position, price, image } = useLocalSearchParams<{
-        gameId: string;
+    const { gameTitle, position, price, image } = useLocalSearchParams<{
         gameTitle: string;
         position: string;
         price: string;
         image: string;
     }>();
 
-    const handleCheckout = async() => {
-        setIsProcessing(true);
-    }
-
     return (
-        <View style = {{flex:1}}>
-            <View style = {styles.orderDetailsPanel}>
-                <Pressable onPress={()=> router.back()}>
-                    <Ionicons name="arrow-back" size={30} color="#111827" style={{ marginTop: 60 }} />
+        <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+            {/* HEADER */}
+            <View style={styles.header}>
+                <Pressable onPress={() => router.back()} style={styles.backButton}>
+                    <Ionicons name="arrow-back" size={22} color="#27253F" />
                 </Pressable>
-            </View>
-            <ScrollView style = {styles.scrollContent}>
-                <Text style = {styles.mediumTitle}>Summary</Text>
-                <View style = {styles.horizontalLine}/>
-                <View style = {styles.basket}>
-                    <View style = {styles.basketGamepPic}>
-                        <Image source={{uri: image}} style={{width: '100%', height: '100%', borderRadius: 30}}/>
-                    </View>
-                    <View style = {{flexDirection:'column', justifyContent:'center'}}>
-                        <Text style = {styles.basketGameTitle}>{gameTitle}</Text>
-                        <Text style = {styles.basketGamePosition}>{position} x1</Text>
-                    </View>
-                    <Text style = {styles.basketGamePrice}>£{price}</Text>
+                <View>
+                    <Text style={styles.headerTitle}>Checkout</Text>
+                    <Text style={styles.headerSub}>{gameTitle} · {position}</Text>
                 </View>
-                <View style = {styles.horizontalLine}/>
-                <Text style = {[styles.mediumTitle, { marginBottom: 22 }]}>Card Details</Text>
+            </View>
 
-                {/* PROMO CODE */}
-                <Text style = {styles.inputFieldTitle}>Promo Code</Text>
-                <TextInput 
-                    style={[styles.inputFieldBar, { flex: 1 }]}
-                    onChangeText={setPromoCode}
-                    value={promoCode}
-                    placeholder="Enter promo code"
-                    placeholderTextColor="silver"
-                />
+            <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+                {/* SUMMARY */}
+                <Text style={styles.sectionTitle}>Summary</Text>
+                <View style={styles.summaryCard}>
+                    <Image source={{ uri: image }} style={styles.summaryImage} />
+                    <View style={styles.summaryInfo}>
+                        <Text style={styles.summaryGameTitle} numberOfLines={1}>{gameTitle}</Text>
+                        <Text style={styles.summaryPosition}>{position} × 1</Text>
+                    </View>
+                    <Text style={styles.summaryPrice}>£{price}</Text>
+                </View>
 
-                {/* CARD NUMBER */}
-                <Text style = {styles.inputFieldTitle}>Card Number</Text>
+                {/* PROMO */}
+                <Text style={styles.sectionTitle}>Promo Code</Text>
+                <View style={styles.inputRow}>
+                    <TextInput
+                        style={styles.inputField}
+                        onChangeText={setPromoCode}
+                        value={promoCode}
+                        placeholder="Enter promo code"
+                        placeholderTextColor="silver"
+                        autoCapitalize="characters"
+                    />
+                    <Pressable style={styles.applyButton}>
+                        <Text style={styles.applyButtonText}>Apply</Text>
+                    </Pressable>
+                </View>
+
+                {/* CARD DETAILS */}
+                <Text style={styles.sectionTitle}>Card Details</Text>
+
+                <Text style={styles.fieldLabel}>Card Number</Text>
                 <TextInput
-                    style={[styles.inputFieldBar, { flex: 1 }]}
+                    style={styles.inputField}
                     onChangeText={setCardNumber}
                     value={cardNumber}
-                    placeholder="Enter card number"
+                    placeholder="0000 0000 0000 0000"
                     keyboardType="numeric"
                     placeholderTextColor="silver"
+                    maxLength={19}
                 />
 
-                {/* CARDHOLDER NAME */}
-                <Text style = {styles.inputFieldTitle}>Cardholder Name</Text>
-                <TextInput 
-                    style={[styles.inputFieldBar, { flex: 1 }]}
+                <Text style={styles.fieldLabel}>Cardholder Name</Text>
+                <TextInput
+                    style={styles.inputField}
                     onChangeText={setCardHolderName}
                     value={cardHolderName}
-                    placeholder="Enter name"
+                    placeholder="Name on card"
                     placeholderTextColor="silver"
                 />
 
-                {/* EXPIRY DATE & CVV */}
-                <View style = {styles.inputFieldDual}>
-                    <View style = {{flex:1, marginRight:10}}>
-                        <Text style = {styles.inputFieldTitle}>Expiry Date</Text>
+                <View style={styles.dualRow}>
+                    <View style={styles.dualField}>
+                        <Text style={styles.fieldLabel}>Expiry</Text>
                         <TextInput
-                            style={[styles.inputFieldBar, { flex: 1 }]}
+                            style={styles.inputField}
                             onChangeText={setExpiryDate}
                             value={expiryDate}
                             placeholder="MM/YY"
                             keyboardType="numeric"
                             placeholderTextColor="silver"
+                            maxLength={5}
                         />
                     </View>
-                    <View style = {{flex:1, marginLeft:10}}>
-                        <Text style = {styles.inputFieldTitle}>CVV</Text>
+                    <View style={styles.dualField}>
+                        <Text style={styles.fieldLabel}>CVV</Text>
                         <TextInput
-                            style={[styles.inputFieldBar, { flex: 1 }]}
+                            style={styles.inputField}
                             onChangeText={setCvv}
                             value={cvv}
-                            placeholder="CVV"
+                            placeholder="•••"
                             keyboardType="numeric"
-                            secureTextEntry={true}
+                            secureTextEntry
                             placeholderTextColor="silver"
+                            maxLength={3}
                         />
                     </View>
                 </View>
             </ScrollView>
 
-            <View style = {styles.joinGameCard}>
-                <View style = {{flexDirection:'column', paddingHorizontal: 20}}>
-                    <Text style={styles.priceLabel}>CHECKOUT</Text>
-                    <Text style={styles.priceValue}>£{price}</Text>
-                </View>
-                <Pressable style={styles.joinGameButton}>
-                    <Text style={styles.joinGameText}>Join Game</Text>
+            {/* CTA */}
+            <View style={styles.footer}>
+                <Pressable style={styles.payButton}>
+                    <Text style={styles.payButtonText}>Confirm & Pay  £{price}</Text>
                 </Pressable>
             </View>
-        </View>
-    )
+        </KeyboardAvoidingView>
+    );
 }
 
-export const styles = StyleSheet.create({
-    layout: {
+const styles = StyleSheet.create({
+    container: {
         flex: 1,
-        paddingTop: 90,
-        paddingHorizontal: 30,
-        backgroundColor: "whitesmoke",
-    },
-    mediumTitle:{
-        fontSize: 20,
-        fontWeight: "700",
-        color: "#111827",
-        marginBottom: 10,
-    },
-    orderDetailsPanel: {
-        position: "absolute",    //placed on top of the normal layout
-        right: 0,
-        top: 0,
-        left: 0,
-        backgroundColor: "#FFFFFF",
-        padding: 20,
-        height:130,
-        zIndex: 10,
-        borderBottomWidth: 1,
-        borderBottomColor: "#E5E7EB",
-    },
-    scrollContent: {
-        paddingTop:160,
-        paddingHorizontal: 30,
-        backgroundColor: "#ecf1f5",
-    },
-    horizontalLine:{
-        height:1,
-        backgroundColor:'silver',
-        marginTop:2,
-        marginBottom:28,
-        width:'100%'
-    },
-    basket:{
-        flexDirection:'row',
-        marginBottom:25
-    },
-    basketGamepPic: {
-        width: 66,           // circle diameter
-        height: 66,          // same as width
-        borderRadius: 33,    // half of width/height
         backgroundColor: 'white',
-        borderColor:'rgba(128,128,128,0.5)',
-        borderWidth:1,
     },
-    basketGameTitle: {
-        fontSize: 15,
-        fontWeight: "500",
-        color: "black",
-        marginLeft: 15,
-        marginBottom:5
+    header: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingTop: 60,
+        paddingBottom: 16,
+        paddingHorizontal: 20,
+        borderBottomWidth: 1,
+        borderBottomColor: '#eee',
+        gap: 12,
     },
-    basketGamePrice: {
-        fontSize: 15,
-        fontWeight: "500",
-        color: "black",
-        marginLeft:'auto',
-        marginRight: 15,
-        marginTop:35
+    backButton: {
+        marginRight: 4,
     },
-    basketGamePosition:{
-        fontSize: 14,
-        fontWeight: "400",
-        color: "#D81159",
-        marginLeft: 15,
-        fontStyle: "italic"
-    },
-    inputFieldTitle: {
-        fontSize: 15,
+    headerTitle: {
+        fontSize: 16,
+        fontWeight: '600',
         color: '#27253F',
-        fontWeight: "500",
-        marginBottom: 7,
     },
-    inputFieldText: {
-        fontSize: 14,
+    headerSub: {
+        fontSize: 12,
+        color: 'gray',
+        marginTop: 1,
+    },
+    content: {
+        padding: 20,
+        paddingBottom: 32,
+    },
+    sectionTitle: {
+        fontSize: 13,
+        fontWeight: '600',
         color: '#27253F',
-        fontWeight: "400",
+        textTransform: 'uppercase',
+        letterSpacing: 0.5,
+        marginBottom: 12,
+        marginTop: 24,
     },
-    inputFieldBar: {
-        flexDirection: "row",
-        alignItems: "center",
-        marginBottom: 18,
-        height: 40,
-        borderColor: "#E5E7EB",
+    summaryCard: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#f7f7f9',
+        borderRadius: 12,
+        padding: 12,
+        gap: 12,
+    },
+    summaryImage: {
+        width: 56,
+        height: 56,
         borderRadius: 8,
+        backgroundColor: '#ddd',
+    },
+    summaryInfo: {
+        flex: 1,
+    },
+    summaryGameTitle: {
+        fontSize: 14,
+        fontWeight: '500',
+        color: '#27253F',
+        marginBottom: 4,
+    },
+    summaryPosition: {
+        fontSize: 13,
+        color: '#D81159',
+        fontStyle: 'italic',
+    },
+    summaryPrice: {
+        fontSize: 15,
+        fontWeight: '600',
+        color: '#27253F',
+    },
+    inputRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+    },
+    fieldLabel: {
+        fontSize: 13,
+        fontWeight: '500',
+        color: '#27253F',
+        marginBottom: 6,
+        marginTop: 14,
+    },
+    inputField: {
+        flex: 1,
+        height: 44,
         borderWidth: 1,
-        width: '100%',
-        paddingHorizontal: 10,
-        backgroundColor: "#FFFFFF"
-    },
-    inputFieldDual: {
-        flexDirection: "row",
-        alignItems: 'center',
-    },
-    joinGameCard:{
-        flexDirection:'row',
-        alignItems: 'center',
-        justifyContent:'space-between',
-        borderRadius: 15,
-        paddingVertical: 5,
-        marginHorizontal:15,
-        backgroundColor: "#27253F" ,
-        elevation: 3,
-        height:48,
-    },
-    priceText:{
-        color:"white",
-        fontSize:11.5,
-        fontWeight:"600",
-        marginStart:25,
-        marginBottom:1,
-        marginTop:3
-    },
-    joinGameButton: {
-        justifyContent:'center',
+        borderColor: '#E5E7EB',
         borderRadius: 8,
-        paddingVertical: 8,
         paddingHorizontal: 12,
-        marginHorizontal:15,
-        backgroundColor: "#D81159",
-        shadowColor: "#D81159",
-        shadowOpacity: 0.3,
-        shadowRadius: 4,
-        elevation: 3,
-        height:33
+        fontSize: 14,
+        color: '#27253F',
+        backgroundColor: 'white',
     },
-    joinGameText:{
-        color:"white",
-        fontSize:14,
-        fontWeight:"700",
-        marginHorizontal:12
+    applyButton: {
+        height: 44,
+        paddingHorizontal: 16,
+        borderRadius: 8,
+        backgroundColor: '#27253F',
+        justifyContent: 'center',
     },
-    priceLabel: {
-        color: "rgba(255,255,255,0.7)",
-        fontSize: 10,
-        fontWeight: "500",
+    applyButtonText: {
+        color: 'white',
+        fontSize: 13,
+        fontWeight: '600',
     },
-    priceValue: {
-        color: "white",
+    dualRow: {
+        flexDirection: 'row',
+        gap: 12,
+    },
+    dualField: {
+        flex: 1,
+    },
+    footer: {
+        paddingHorizontal: 20,
+        paddingBottom: 24,
+        paddingTop: 12,
+        borderTopWidth: 1,
+        borderTopColor: '#eee',
+    },
+    payButton: {
+        backgroundColor: '#D81159',
+        borderRadius: 10,
+        height: 50,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    payButtonText: {
+        color: 'white',
         fontSize: 15,
-        fontWeight: "700",
-        marginBottom:4
-    }
-})
+        fontWeight: '700',
+    },
+});
