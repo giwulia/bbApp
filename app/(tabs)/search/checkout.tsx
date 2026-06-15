@@ -1,7 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
-import { Image, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { Image, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View, Modal } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { joinGame } from "@/src/api/client";
+
 
 export default function CheckoutScreen() {
     const [promoCode, setPromoCode] = useState('');
@@ -9,9 +11,12 @@ export default function CheckoutScreen() {
     const [cardNumber, setCardNumber] = useState('');
     const [expiryDate, setExpiryDate] = useState('');
     const [cvv, setCvv] = useState('');
+    const [message, setMessage] = useState('');
+    const [paid, setPaid] = useState(false);
     const router = useRouter();
 
-    const { gameTitle, position, price, image } = useLocalSearchParams<{
+    const { gameId, gameTitle, position, price, image } = useLocalSearchParams<{
+        gameId: string;
         gameTitle: string;
         position: string;
         price: string;
@@ -113,10 +118,36 @@ export default function CheckoutScreen() {
 
             {/* CTA */}
             <View style={styles.footer}>
-                <Pressable style={styles.payButton}>
-                    <Text style={styles.payButtonText}>Confirm & Pay  £{price}</Text>
+                <Pressable style={[styles.payButton, paid && styles.buttonDisabled]} disabled ={paid} onPress={async () => {
+                    if (paid) return;
+                    setPaid(true);
+                    try {
+                        const response = await joinGame(gameId, position);
+                        setMessage(response.message);
+                    } catch (e: any) {
+                        setMessage(e.message ?? 'Something went wrong');
+                        setPaid(false);
+                    }
+                }}>
+                    <Text style={styles.payButtonText}>Confirm & Pay £{price}</Text>
                 </Pressable>
             </View>
+
+            <Modal
+                visible={message !== ''}
+                transparent
+                animationType="fade"
+                onRequestClose={() => setMessage('')}
+            >
+                <View style={styles.modalBackdrop}>
+                    <View style={styles.modalCard}>
+                        <Text style={styles.modalMessage}>{message}</Text>
+                        <Pressable onPress={() => { setMessage(''); if (paid) router.back(); }} style={styles.modalClose}>
+                            <Text style={styles.modalCloseText}>Close</Text>
+                        </Pressable>
+                    </View>
+                </View>
+            </Modal>
         </KeyboardAvoidingView>
     );
 }
@@ -251,9 +282,39 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
     },
+    buttonDisabled: {
+        backgroundColor: '#ccc',
+    },
     payButtonText: {
         color: 'white',
         fontSize: 15,
         fontWeight: '700',
+    },
+    modalBackdrop: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 20,
+    },
+    modalCard: {
+        backgroundColor: 'white',
+        borderRadius: 12,
+        padding: 20,
+        maxWidth: 400,
+        width: '100%',
+    },
+    modalMessage: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#27253F',
+    },
+    modalClose: {
+        marginTop: 20,
+        alignSelf: 'flex-end',
+    },
+    modalCloseText: {
+        color: '#D81159',
+        fontWeight: '600',
     },
 });

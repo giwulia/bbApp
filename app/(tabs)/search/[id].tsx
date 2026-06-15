@@ -3,9 +3,13 @@ import { getGame } from '@/src/api/client';
 import { GameResponse } from '@/src/api/types';
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { formatGameDate, formatTime } from "../../../src/utils/format";
+import { useAuth } from "@/src/context/AuthContext";
+
 
 export default function Game() {
     const { id } = useLocalSearchParams<{ id: string }>();
@@ -13,26 +17,32 @@ export default function Game() {
     const [imgReady, setImgReady] = useState(false);
     const [expanded, setExpanded] = useState(false);
     const router = useRouter();
+    const { user: authUser } = useAuth();
+    const { top } = useSafeAreaInsets();
+    const alreadyJoined = !!authUser && game?.players.some(p => p.user_id === authUser.id);
+    const isGameHost = !!authUser && game?.organizer.id===authUser.id;
 
-    useEffect(() => {
+
+    useFocusEffect(useCallback(() => {
         let cancelled = false;
         (async () => {
             const data = await getGame(id);
             if (!data || cancelled) return;
-            setGame(data);
+            setGame({ ...data });
             if (data.img) await Image.prefetch(data.img).catch(() => {});
             if (!cancelled) setImgReady(true);
         })();
         return () => { cancelled = true; };
-    }, [id]);
+    }, [id]));
 
-    if (!game) return <Text> Loading game... </Text>;
+    if (!game) return <Text style = {[styles.emptyText]}> Loading game... </Text>;
 
     const navigateToTeam = () => {
         router.push({
             pathname: './team',
             params: {
                 id: game.id,
+                organizer: game.organizer.id,
                 gameTitle: game.title,
                 price: String(game.price_per_spot),
                 image: game.img ?? '',
@@ -54,7 +64,7 @@ export default function Game() {
                         onLoadEnd={() => setImgReady(true)}
                     />
                 }>
-                <Text style={styles.gameTitle} numberOfLines={2}>{game.title.toUpperCase()}</Text>
+                <Text style={styles.gameTitle} numberOfLines={1}>{game.title.toUpperCase()}</Text>
                 <View style={[styles.gameInfoRow, { marginBottom: 0 }]}>
                     <Text style={styles.gameLevel}>{game.level_required.toUpperCase()}</Text>
                 </View>
@@ -118,18 +128,24 @@ export default function Game() {
                 <Text style={styles.sectionTitle}>Refund Policy</Text>
                 <View style={[styles.sectionCard, { marginBottom: 50 }]}>
                     <Text style={styles.sectionText}>
-                        This game has a 24-hour cancellation policy, and if you cancel within that period, you'll be eligible for a full 100% refund.
+                        This game has a 24-hour cancellation policy, and if you cancel within that period, you will be eligible for a full 100% refund.
                     </Text>
                 </View>
             </ParallaxScrollView>
 
-            <View style={styles.joinGameCard}>
+            {isGameHost && new Date(game.date) >= new Date() && (
+                <Pressable style={[styles.editButton, { top: top + 8 }]} onPress={() => router.push({ pathname: './edit', params: { id: game.id } })}>
+                    <Ionicons name="pencil" size={18} color="white" />
+                </Pressable>
+            )}
+
+        <View style={styles.joinGameCard}>
                 <View style={{ flexDirection: 'column', paddingHorizontal: 20 }}>
                     <Text style={styles.priceLabel}>SINGLE ENTRY</Text>
                     <Text style={[styles.priceValue, { marginBottom: 4 }]}>{`£${game.price_per_spot}`}</Text>
                 </View>
-                <Pressable style={styles.joinGameButton} onPress={navigateToTeam}>
-                    <Text style={styles.joinGameText}>Join Game</Text>
+                <Pressable style={styles.joinGameButton} onPress={() => navigateToTeam()}>
+                    <Text style={styles.joinGameText}>{alreadyJoined ? 'Edit Booking' : 'Join Game'}</Text>
                 </Pressable>
             </View>
         </View>
@@ -312,4 +328,15 @@ const styles = StyleSheet.create({
         fontSize: 15,
         fontWeight: '700',
     },
+    editButton: {
+        position: 'absolute',
+        right: 16,
+        zIndex: 10,
+        backgroundColor: 'rgba(0,0,0,0.35)',
+        borderRadius: 20,
+        padding: 8,
+    },
+    emptyText:{
+        alignSelf:'center'
+    }
 });

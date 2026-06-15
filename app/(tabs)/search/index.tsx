@@ -2,7 +2,8 @@ import { Feather, Ionicons } from "@expo/vector-icons";
 import { Settings2 } from 'lucide-react-native'
 import { useRouter } from "expo-router";
 import GameCard from "@/components/GameCard";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState, useCallback } from "react";
+import { useFocusEffect } from "@react-navigation/native";
 import {
     ActivityIndicator,
     FlatList,
@@ -52,7 +53,7 @@ export default function Games() {
             setIsLoading(false);
         }
     }
-    useEffect(() => {loadGames()}, [])
+    useFocusEffect(useCallback(() => { loadGames(); }, []))
 
     //Defining filters
     const openPanel = () => {
@@ -174,7 +175,7 @@ export default function Games() {
             const matchesDate = specificDate ? g.date === specificDate : isMatchDate(gameDayT, filter);
             return matchesLevel && matchesQuery && matchesCity && matchesGender && matchesDate && matchesType
             });
-        }, [games, query, filters.level, filters.city,filters.gender,filters.type, date]);
+        }, [games, query, filters.level, filters.city, filters.gender, filters.type, date, calendarDate]);
 
 
         if (isLoading) {
@@ -205,10 +206,15 @@ export default function Games() {
                     <Settings2 size={15} color="white"/>
                 </Pressable>
             </View>
-            {(filters.city || filters.level || filters.gender || calendarDate) && (
+            {(filters.city || filters.level || filters.gender || filters.type || calendarDate) && (
                 <View style={styles.activeFiltersRow}>
+                    {filters.type && (
+                        <Pressable style={styles.activeFiltersBox} onPress={() => selectType(filters.type)}>
+                            <Text style={styles.activeFilterText}>{filters.type.toUpperCase()}  ✕</Text>
+                        </Pressable>
+                    )}
                     {filters.city && (
-                         <Pressable style={styles.activeFiltersBox} onPress={() => selectCity(filters.city)}>
+                        <Pressable style={styles.activeFiltersBox} onPress={() => selectCity(filters.city)}>
                             <Text style={styles.activeFilterText}>{filters.city.toUpperCase()}  ✕</Text>
                         </Pressable>
                     )}

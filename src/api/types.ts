@@ -121,3 +121,18 @@ export type Category = {
     position: string;
     slots: number;
 };
+
+export type JoinGameResponse = {
+    message: string;
+    signup_id: string;
+    checkout_url: string | null;
+};
+
+export type SignUpBody = {
+    name: string;
+    username: string;
+    email: string;
+    password: string;
+    gender: PlayerGender;
+    skill_level: SkillLevel;
+};

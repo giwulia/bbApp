@@ -1,68 +1,76 @@
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { useState } from "react";
 import {
+    ActivityIndicator,
     Image,
     Pressable,
     ScrollView,
     StyleSheet,
     Text,
-    View
+    View,
+    Modal
 } from "react-native";
-import type { Category } from "../../../src/api/types";
+import type { Category, CreateGameBody, GameGender, GameType, SkillLevel } from "../../../src/api/types";
+import {createGames} from "../../../src/api/client";
 
-export default function reviewGame() {
+export default function ReviewGame() {
     const router = useRouter()
+    const [loading, setLoading] = useState(false)
+    const [error, setError] = useState('')
+    const [gamePosted, setGamePosted] = useState(false)
+    const [message, setMessage] = useState('')
 
     type Params = {
-        gameTitle: string
+        title: string
         type: string
-        level: string
-        price: string
+        level_required: string
+        price_per_spot: string
         gender: string
         description: string
         image: string
         date: string
-        time: string
-        endTime:string
+        start_time: string
+        end_time: string
         location: string
-        locationUrl: string
+        location_url: string
         categories: string,
-        totalSpots:string,
+        total_spots:string,
         preset: string
     }
 
     const params = useLocalSearchParams<Params>()
 
     const details = {
-        gameTitle: params.gameTitle,
+        title: params.title,
         type: params.type,
-        level: params.level,
-        price: Number(params.price),
+        level_required: params.level_required,
+        price_per_spot: Number(params.price_per_spot),
         gender: params.gender,
         description: params.description,
     }
 
     const timeLocation = {
         date: params.date ? new Date(params.date) : null,
-        time: params.time ? new Date(params.time) : null,
-        endTime:params.endTime? new Date(params.endTime): null,
+        time: params.start_time ? new Date(params.start_time) : null,
+        endTime: params.end_time ? new Date(params.end_time) : null,
         location: params.location,
-        locationUrl: params.locationUrl,
+        locationUrl: params.location_url,
     }
 
     const timeRange =
     timeLocation.time && timeLocation.endTime
         ? `${timeLocation.time.toLocaleTimeString("en-GB", {
-              hour: "2-digit",
-              minute: "2-digit",
-          })} - ${timeLocation.endTime.toLocaleTimeString("en-GB", {
-              hour: "2-digit",
-              minute: "2-digit",
-          })}`
+            hour: "2-digit",
+            minute: "2-digit",
+        })} - ${timeLocation.endTime.toLocaleTimeString("en-GB", {
+            hour: "2-digit",
+            minute: "2-digit",
+        })}`
         : "-";
 
     const teamSheet ={
-        totalSpots: params.totalSpots,
+        totalSpots: params.total_spots,
         preset: params.preset,
         categories: params.categories
         ? (JSON.parse(params.categories) as Category[])
@@ -72,7 +80,7 @@ export default function reviewGame() {
     const detailsRows = [
         {
             label: "GAME TITLE",
-            value: details.gameTitle
+            value: details.title
         },
         {
             label: "SESSION TYPE",
@@ -80,11 +88,11 @@ export default function reviewGame() {
         },
         {
             label: "LEVEL",
-            value: details.level
+            value: details.level_required
         },
         {
             label: "PRICE (£)",
-            value: details.price
+            value: details.price_per_spot
         },
         {
             label: "GENDER",
@@ -152,19 +160,19 @@ export default function reviewGame() {
             pathname: "/createFlow/createGame",
             params: {
                 step: String(step),
-                gameTitle: params.gameTitle,
+                title: params.title,
                 type: params.type,
-                level: params.level,
-                price: params.price,
+                level_required: params.level_required,
+                price_per_spot: params.price_per_spot,
                 image: params.image,
                 gender: params.gender,
                 description: params.description,
                 date: params.date,
-                time: params.time,
-                endTime: params.endTime,
+                start_time: params.start_time,
+                end_time: params.end_time,
                 location: params.location,
-                locationUrl: params.locationUrl,
-                totalSpots: params.totalSpots,
+                location_url: params.location_url,
+                total_spots: params.total_spots,
                 preset: params.preset,
                 categories: params.categories,
             }
@@ -229,9 +237,80 @@ export default function reviewGame() {
             </View>
             </View>
             </ScrollView>
-            <Pressable style={styles.publishButton}>
-                <Text style={styles.publishButtonText}>Publish Game</Text>
+            {error ? <Text style={{ color: '#D81159', textAlign: 'center', marginBottom: 8, marginHorizontal: 15 }}>{error}</Text> : null}
+            <Pressable
+                style={[styles.publishButton, loading && { opacity: 0.6 }]}
+                disabled={loading}
+                onPress={async () => {
+                    if (loading) return;
+                    setLoading(true);
+                    setError('');
+                    try {
+                        const gameType = (params.type ?? '').toLowerCase() as GameType;
+                        const categories: Category[] = params.categories ? JSON.parse(params.categories) : [];
+                        const position_slots = gameType === 'game' && categories.length > 0
+                            ? categories.reduce<Record<string, number>>((acc, cat) => ({
+                                ...acc,
+                                [cat.position.toLowerCase()]: cat.slots,
+                            }), {})
+                            : null;
+
+                        const d = new Date(params.date);
+                        const date = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                        const start_time = new Date(params.start_time).toTimeString().split(' ')[0];
+                        const end_time = new Date(params.end_time).toTimeString().split(' ')[0];
+
+                        const body: CreateGameBody = {
+                            title: params.title,
+                            type: gameType,
+                            level_required: (params.level_required ?? '').toLowerCase() as SkillLevel,
+                            date,
+                            start_time,
+                            end_time,
+                            location: params.location ?? '',
+                            location_url: params.location_url ?? '',
+                            gender: (params.gender ?? '').toLowerCase() as GameGender,
+                            total_spots: Number(params.total_spots),
+                            price_per_spot: Number(params.price_per_spot),
+                            description: params.description ?? '',
+                            img: params.image,
+                            position_slots,
+                            reserved_spots: 0,
+                            template_id: null,
+                        };
+
+                        const game = await createGames(body);
+                        router.replace({ pathname: '/search/[id]', params: { id: game.id } });
+                        setGamePosted(true);
+                        setMessage('Game published successfully!');
+                    } catch (e: any) {
+                        setError(e.message ?? 'Failed to publish game');
+                        setMessage(e.message ?? 'Failed to publish game');
+                    } finally {
+                        setLoading(false);
+                    }
+                }}
+            >
+                {loading
+                    ? <ActivityIndicator color="white" />
+                    : <Text style={styles.publishButtonText}>Publish Game</Text>
+                }
             </Pressable>
+            <Modal
+                visible={message !== ''}
+                transparent
+                animationType="fade"
+                onRequestClose={() => setMessage('')}
+            >
+                <View style={styles.modalBackdrop}>
+                    <View style={styles.modalCard}>
+                        <Text style={styles.modalMessage}>{message}</Text>
+                        <Pressable onPress={() => { setMessage(''); if (gamePosted) router.back(); }} style={styles.modalClose}>
+                            <Text style={styles.modalCloseText}>Close</Text>
+                        </Pressable>
+                    </View>
+                </View>
+            </Modal>
         </View>
     )
 
@@ -324,5 +403,32 @@ export const styles = StyleSheet.create({
         backgroundColor: 'rgba(0,0,0,0.35)',
         borderRadius: 20,
         padding: 4,
+    },
+        modalBackdrop: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 20,
+    },
+    modalCard: {
+        backgroundColor: 'white',
+        borderRadius: 12,
+        padding: 20,
+        maxWidth: 400,
+        width: '100%',
+    },
+    modalMessage: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#27253F',
+    },
+    modalClose: {
+        marginTop: 20,
+        alignSelf: 'flex-end',
+    },
+    modalCloseText: {
+        color: '#D81159',
+        fontWeight: '600',
     },
 })

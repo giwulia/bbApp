@@ -3,11 +3,17 @@ import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import type { GameResponse } from "@/src/api/types";
 import { formatGameDate, formatTime } from "@/src/utils/format";
 
-export default function GameCard({ item, onPress }: { item: GameResponse; onPress: () => void }) {
+export default function GameCard({ item, onPress, dimmed }: { item: GameResponse; onPress: () => void; dimmed?: boolean }) {
     return (
         <View style={styles.gameCard}>
             <Pressable onPress={onPress}>
-                <Image source={{ uri: item.img ?? undefined }} style={styles.gameImage} />
+                <View>
+                    <Image source={{ uri: item.img ?? undefined }} style={styles.gameImage} />
+                    {dimmed && <View style={styles.imageOverlay} />}
+                    <View style={styles.sportBadge}>
+                        <Text style={styles.sportBadgeText}>Volleyball</Text>
+                    </View>
+                </View>
                 <View style={styles.gameInfoRow}>
                     <Text style={styles.gameHost}>{item.organizer.name} I</Text>
                     <Text style={styles.gameLevel}>{item.level_required.toUpperCase()}</Text>
@@ -59,6 +65,24 @@ const styles = StyleSheet.create({
         height: 80,
         marginBottom: 6,
     },
+    imageOverlay: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: 'rgba(0,0,0,0.45)',
+    },
+    sportBadge: {
+        position: 'absolute',
+        bottom: 8,
+        right: 4,
+        backgroundColor: 'rgba(75, 75, 75, 0.5)',
+        borderRadius: 6,
+        paddingHorizontal: 7,
+        paddingVertical: 3,
+    },
+    sportBadgeText: {
+        color: 'white',
+        fontSize: 10,
+        fontWeight: '600',
+    },
     gameHost: {
         fontSize: 12,
         fontWeight: "400",
@@ -95,8 +119,8 @@ const styles = StyleSheet.create({
     },
     gameInfo: {
         fontSize: 11,
-        fontWeight: "300",
+        fontWeight: "400",
         paddingHorizontal: 6,
-        color: "dimgray",
+        color: "gray",
     },
 });

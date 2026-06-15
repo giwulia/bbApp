@@ -1,4 +1,4 @@
-import { Ionicons, Octicons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as ImagePicker from 'expo-image-picker';
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -19,7 +19,7 @@ import type { Category, SkillLevel } from "../../../src/api/types";
 import { useParsedParams } from "../../../src/utils/useParsedParams";
 
 
-export default function createGame() {
+export default function CreateGame() {
     //hooks
     const params = useLocalSearchParams()
     const { getString, getNumber, getDate, getJSON } = useParsedParams();
@@ -28,19 +28,19 @@ export default function createGame() {
     // --------------------
     // STATE
     // --------------------
-    const [gameTitle, setGameTitle] = useState(getString("gameTitle") ?? "");
+    const [title, setTitle] = useState(getString("title") ?? "");
     const [type, setType] = useState(getString("type")?? null)
     const [showTypeDropdown, setShowTypeDropdown]=useState(false)
-    const [level, setLevel] = useState(getString("level") ?? null);
+    const [level_required, setLevelRequired] = useState(getString("level_required") ?? null);
     const [showLevelDropdown, setShowLevelDropdown]=useState(false)
     const [location, setLocation] = useState(getString("location") ?? "");
-    const [locationUrl, setLocationUrl] = useState(getString("locationUrl") ?? "");
-    const [price, setPrice] = useState(getNumber("price"));
+    const [location_url, setLocationUrl] = useState(getString("location_url") ?? "");
+    const [price_per_spot, setPricePerSpot] = useState(getNumber("price_per_spot"));
     const [image, setImage] = useState(getString("image") ?? null);
     const [date, setDate] = useState(getDate("date"));
     const [showDatePicker, setShowDatePicker] = useState(false)
-    const [time, setTime] = useState(getDate("time"));
-    const [endTime, setEndTime] = useState(getDate("endTime"));
+    const [start_time, setStartTime] = useState(getDate("start_time"));
+    const [end_time, setEndTime] = useState(getDate("end_time"));
     const [showTimePicker, setShowTimePicker] = useState(false)
     const [showEndTimePicker, setShowEndTimePicker] = useState(false)
     const [gender, setGender] = useState(getString("gender") ?? null);
@@ -51,7 +51,7 @@ export default function createGame() {
         const newStep = getNumber("step") ?? 1;
         setStep(newStep);
     }, [params.step]);
-    const [totalSpots, setTotalSpots] = useState(getNumber("totalSpots"))
+    const [total_spots, setTotalSpots] = useState(getNumber("total_spots"))
     const [preset, setPreset] = useState<string>(getString("preset") ?? 'None')
     const [showPresetDropdown, setShowPresetDropdown]=useState(false)
     const [presetName, setPresetName]= useState("")
@@ -65,19 +65,19 @@ export default function createGame() {
     // STATIC DATA
     // --------------------
     const steps=["Details","Date & Location", "Team Sheet"]
-    const typeOptions=['Game','Drill']
-    const levelOptions=['Beginner','Intermediate','Advanced','Competitive']
-    const genderOptions=['Female','Male','Mixed']
+    const typeOptions=['game','drill']
+    const levelOptions=['beginner','intermediate','advanced','competitive']
+    const genderOptions=['female','male','mixed']
     const presetOptions=["None","5:1"]
     const [presetOptionsList, setPresetOptionsList] = useState<string[]>(presetOptions)
 
     const presetOptionsConfig: Record<string, Category[]>={
         "5:1":[
-            {position:'Setter', slots:2},
-            {position:'Outside', slots:4},
-            {position:'Libero', slots:2},
-            {position:'Opposite', slots:2},
-            {position:'Middle', slots:2},
+            {position:'setter', slots:2},
+            {position:'outside', slots:4},
+            {position:'libero', slots:2},
+            {position:'opposite', slots:2},
+            {position:'middle', slots:2},
         ]
     }
 
@@ -136,7 +136,7 @@ export default function createGame() {
     }
 
     const spotsSelected = categories.reduce((total, cat) => total + cat.slots, 0)
-    const totalSpotsVerified = spotsSelected == totalSpots
+    const totalSpotsVerified = spotsSelected === total_spots
 
     function VerifyTotalSpots({ totalSpotsSelected, totalSpots }: { totalSpotsSelected: number, totalSpots: number }) {
         return(
@@ -153,17 +153,17 @@ export default function createGame() {
     // ----------------------
     const saveAsPreset =()=>setShowSavePresetModal(true)
     const fields = [
-        gameTitle,
+        title,
         type,
-        level,
+        level_required,
         location,
-        locationUrl,
-        price,
+        location_url,
+        price_per_spot,
         gender,
         date,
-        time,
-        endTime,
-        totalSpots,
+        start_time,
+        end_time,
+        total_spots,
     ]
 
     const allFieldsFilled = fields.every(item => item != null && item !== '')
@@ -202,7 +202,7 @@ export default function createGame() {
                         {steps.map((item,index) =>(
                         <View key={item} style={styles.stepColumn}>
                                 <View style={[styles.horizontalLine, step === index + 1 && { backgroundColor: '#D81159',height:1.5}]}/>
-                                <Text style={[styles.stepTitle, step ==index +1 && {color:'#D81159',fontWeight:'700'}]}>{item}</Text>
+                                <Text style={[styles.stepTitle, step ===index +1 && {color:'#D81159',fontWeight:'700'}]}>{item}</Text>
                         </View>
                         ))}
                     </View>
@@ -217,8 +217,8 @@ export default function createGame() {
                             <View style={styles.inputFieldBar}>
                                 <TextInput
                                     style={[styles.inputFieldText, { flex: 1 }]}
-                                    onChangeText={setGameTitle}
-                                    value={gameTitle}
+                                    onChangeText={setTitle}
+                                    value={title}
                                     placeholder="Enter name"
                                     placeholderTextColor="silver"
                                 />
@@ -241,7 +241,7 @@ export default function createGame() {
                                                 setShowTypeDropdown(false)
                                             }}
                                         >
-                                            <Text style={[styles.dropdownText, { flex: 1 }]}>{option}</Text>
+                                            <Text style={[styles.dropdownText, { flex: 1 }]}>{option.charAt(0).toUpperCase() + option.slice(1)}</Text>
                                             {type === option && <Ionicons name="checkmark" size={16} color="#D81159" />}
                                         </Pressable>
                                     ))}
@@ -251,7 +251,7 @@ export default function createGame() {
                             {/* LEVEL */}
                             <Text style={styles.inputFieldTitle}>LEVEL <Text style={styles.required}>*</Text></Text>
                             <Pressable style={styles.inputFieldBar} onPress={() => {Keyboard.dismiss(); setShowLevelDropdown(!showLevelDropdown)}}>
-                                <Text style={[styles.inputFieldText, { flex: 1, color: level ? "#27253F" : "silver" }]}>{level ?? 'Select level'}</Text>
+                                <Text style={[styles.inputFieldText, { flex: 1, color: level_required ? "#27253F" : "silver" }]}>{level_required ?? 'Select level'}</Text>
                                 <Ionicons name={showLevelDropdown ? "chevron-up" : "chevron-down"} size={16} color="silver" />
                             </Pressable>
                             {showLevelDropdown && (
@@ -261,12 +261,12 @@ export default function createGame() {
                                             key={option}
                                             style={styles.dropdownItem}
                                             onPress={() => {
-                                                setLevel(option as SkillLevel)
+                                                setLevelRequired(option as SkillLevel)
                                                 setShowLevelDropdown(false)
                                             }}
                                         >
-                                            <Text style={[styles.dropdownText, { flex: 1 }]}>{option}</Text>
-                                            {level === option && <Ionicons name="checkmark" size={16} color="#D81159" />}
+                                            <Text style={[styles.dropdownText, { flex: 1 }]}>{option.charAt(0).toUpperCase() + option.slice(1)}</Text>
+                                            {level_required === option && <Ionicons name="checkmark" size={16} color="#D81159" />}
                                         </Pressable>
                                     ))}
                                 </View>
@@ -291,7 +291,7 @@ export default function createGame() {
                                                 setShowGenderDropDown(false)
                                             }}
                                         >
-                                            <Text style={[styles.dropdownText, { flex: 1 }]}>{option}</Text>
+                                            <Text style={[styles.dropdownText, { flex: 1 }]}>{option.charAt(0).toUpperCase() + option.slice(1)}</Text>
                                             {gender === option && <Ionicons name="checkmark" size={16} color="#D81159" />}
                                         </Pressable>
                                     ))}
@@ -303,8 +303,8 @@ export default function createGame() {
                             <View style={styles.inputFieldBar}>
                                 <TextInput
                                     style={[styles.inputFieldText, { flex: 1 }]}
-                                    onChangeText={(val) => setPrice(Number(val))}
-                                    value={price?.toString() ?? ""}
+                                    onChangeText={(val) => setPricePerSpot(Number(val))}
+                                    value={price_per_spot?.toString() ?? ""}
                                     placeholder="£00.00"
                                     keyboardType="numeric"
                                     placeholderTextColor="silver"
@@ -349,13 +349,13 @@ export default function createGame() {
                             <Text style={styles.inputFieldTitle}>START & END TIME <Text style={styles.required}>*</Text></Text>
                             <View style={styles.inputFieldDual}>
                                 <Pressable style={[styles.inputFieldBar, { flex: 1 }]} onPress={() => setShowTimePicker(!showTimePicker)}>
-                                    <Text style={[styles.inputFieldText,{color: time ? "#27253F" :"silver"}]}>
-                                        {time ? time.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : 'HH:MM'}
+                                    <Text style={[styles.inputFieldText,{color: start_time ? "#27253F" :"silver"}]}>
+                                        {start_time ? start_time.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : 'HH:MM'}
                                     </Text>
                                 </Pressable>
                                 <Pressable style={[styles.inputFieldBar, {flex:1}]} onPress={() => setShowEndTimePicker(!showEndTimePicker)}>
-                                    <Text style={[styles.inputFieldText,{color: endTime? "#27253F" :"silver"}]}>
-                                        {endTime ? endTime.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : 'HH:MM'}
+                                    <Text style={[styles.inputFieldText,{color: end_time? "#27253F" :"silver"}]}>
+                                        {end_time ? end_time.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : 'HH:MM'}
                                     </Text>
                                 </Pressable>
                             </View>
@@ -370,15 +370,15 @@ export default function createGame() {
                                         </Pressable>
                                     </View>
                                     <DateTimePicker
-                                        value={time ?? new Date()}
+                                        value={start_time ?? new Date()}
                                         mode="time"
                                         display="spinner"
                                         onChange={(event, selectedTime) => {
                                             if (Platform.OS === 'android') {
                                                 setShowTimePicker(false)
-                                                if (event.type === 'set' && selectedTime) setTime(selectedTime)
+                                                if (event.type === 'set' && selectedTime) setStartTime(selectedTime)
                                             } else {
-                                                if (selectedTime) setTime(selectedTime)
+                                                if (selectedTime) setStartTime(selectedTime)
                                             }
                                         }}
                                     />
@@ -395,7 +395,7 @@ export default function createGame() {
                                         </Pressable>
                                     </View>
                                     <DateTimePicker
-                                        value={endTime ?? new Date()}
+                                        value={end_time ?? new Date()}
                                         mode="time"
                                         display="spinner"
                                         onChange={(event, selectedTime) => {
@@ -428,7 +428,7 @@ export default function createGame() {
                                 <TextInput
                                     style={[styles.inputFieldText, { flex: 1 }]}
                                     onChangeText={setLocationUrl}
-                                    value={locationUrl}
+                                    value={location_url}
                                     placeholder="https://"
                                     placeholderTextColor="silver"
                                     autoCapitalize="none"
@@ -446,7 +446,7 @@ export default function createGame() {
                                 <TextInput
                                     style={[styles.inputFieldText, { flex: 1 }]}
                                     onChangeText={(val) => setTotalSpots(Number(val))}
-                                    value={totalSpots?.toString() ?? ""}
+                                    value={total_spots?.toString() ?? ""}
                                     placeholder="0"
                                     keyboardType="numeric"
                                     placeholderTextColor="silver"
@@ -468,7 +468,7 @@ export default function createGame() {
                                             onPress={() => {
                                                 setPreset(option)
                                                 setShowPresetDropdown(false)
-                                                if (option == 'None'){
+                                                if (option === 'None'){
                                                     setCategories([])
                                                 } else {
                                                     const presetData = presetOptionsConfig[option]
@@ -490,7 +490,7 @@ export default function createGame() {
                             )}
 
                             {/*CUSTOM*/}
-                            {preset!='None' &&
+                            {preset!=='None' &&
                                 <>
                                 <View style={styles.presetConfigBox}>
                                     {categories.map((item, index) => (
@@ -520,12 +520,12 @@ export default function createGame() {
                                         </View>
                                     ))}
                                 </View>
-                                <VerifyTotalSpots totalSpotsSelected={spotsSelected ?? 0} totalSpots={totalSpots ?? 0} />
+                                <VerifyTotalSpots totalSpotsSelected={spotsSelected ?? 0} totalSpots={total_spots ?? 0} />
                                 </>
                             }
 
                             {/*NONE*/}
-                            {preset == 'None' &&
+                            {preset === 'None' &&
                                 <>
                                     <Text style={styles.hintText}>
                                         No positions defined for this game
@@ -620,7 +620,7 @@ export default function createGame() {
             </Modal>
         <View style={styles.horizontalButton}>
             <Pressable disabled={step === 1} style ={[styles.goBackButton, step === 1 && {opacity: 0.4}]} onPress = {()=> {
-                if (step !=1) {
+                if (step !==1) {
                     setStep(step-1)
                 }
             }}>
@@ -635,24 +635,24 @@ export default function createGame() {
                         step === 3 && !canProceedFromStep3 && { opacity: 0.4 }
                     ]}
                     onPress={() => {
-                    if (step == 3) {
+                    if (step === 3) {
                         if (!canProceedFromStep3) return
                             router.push({
                                 pathname: "/createFlow/reviewGame",
                                 params: {
-                                    gameTitle,
+                                    title,
                                     type,
-                                    level,
+                                    level_required,
                                     location,
-                                    locationUrl,
-                                    price,
+                                    location_url,
+                                    price_per_spot,
                                     image,
                                     gender,
                                     description,
                                     date: date?.toISOString(),
-                                    time: time?.toISOString(),
-                                    endTime: endTime?.toISOString(),
-                                    totalSpots,
+                                    start_time: start_time?.toISOString(),
+                                    end_time: end_time?.toISOString(),
+                                    total_spots,
                                     preset,
                                     categories: JSON.stringify(categories)
                                 }

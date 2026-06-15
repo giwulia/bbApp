@@ -1,49 +1,17 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View, Image } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View, Image } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { User, PlayerPositions, SkillLevel, PlayerGender } from "@/src/api/types";
 import { useState } from "react";
 import { updateUser } from "@/src/api/client";
 import * as ImagePicker from 'expo-image-picker';
 import DefaultAvatar from "@/components/DefaultAvatar";
+import Dropdown from "@/components/Dropdown";
 
 const positions: PlayerPositions[] = ["setter", "outside", "middle", "opposite", "libero"];
 const skillLevels: SkillLevel[] = ["beginner", "intermediate", "advanced", "competitive"];
 const genders: PlayerGender[] = ["male", "female"];
-
-function Dropdown<T extends string>({ options, selected, onSelect, placeholder }: {
-    options: T[];
-    selected: T | null;
-    onSelect: (v: T) => void;
-    placeholder?: string;
-}) {
-    const [open, setOpen] = useState(false);
-    return (
-        <>
-            <Pressable style={styles.dropdownTrigger} onPress={() => setOpen(true)}>
-                <Text style={[styles.dropdownValue, !selected && styles.dropdownPlaceholder]}>
-                    {selected ? selected.charAt(0).toUpperCase() + selected.slice(1) : placeholder ?? 'Select...'}
-                </Text>
-                <Ionicons name="chevron-down" size={16} color="gray" />
-            </Pressable>
-            <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
-                <Pressable style={styles.backdrop} onPress={() => setOpen(false)} />
-                <View style={styles.dropdownMenu}>
-                    {options.map(opt => (
-                        <Pressable key={opt} style={[styles.dropdownOption, selected === opt && styles.dropdownOptionSelected]}
-                            onPress={() => { onSelect(opt); setOpen(false); }}>
-                            <Text style={[styles.dropdownOptionText, selected === opt && styles.dropdownOptionTextSelected]}>
-                                {opt.charAt(0).toUpperCase() + opt.slice(1)}
-                            </Text>
-                            {selected === opt && <Ionicons name="checkmark" size={16} color="#D81159" />}
-                        </Pressable>
-                    ))}
-                </View>
-            </Modal>
-        </>
-    );
-}
 
 export default function ManageProfile() {
     const router = useRouter();
